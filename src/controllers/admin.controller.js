@@ -366,3 +366,23 @@ export const getTicketProducts = async (req, res) => {
     return res.status(500).json({ ok: false, message: err.message });
   }
 };
+
+export const getAllStations = async (req, res) => {
+  try {
+    const result = await adminService.getAllStations();
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+export const deleteStation = async (req, res) => {
+  try {
+    const actor_user_id = req.user.user_id;
+    const { code } = req.params; // Lấy code từ URL
+    const result = await adminService.deleteStation(actor_user_id, code);
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};

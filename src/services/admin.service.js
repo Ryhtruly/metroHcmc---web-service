@@ -291,3 +291,24 @@ export const getTicketProducts = async () => {
   );
   return unwrap(result);
 };
+
+/**
+ * 17) Lấy danh sách tất cả nhà ga
+ */
+export const getAllStations = async () => {
+  const result = await pool.query(
+    `SELECT api.fn_admin_get_stations_json() AS result`
+  );
+  return unwrap(result);
+};
+
+/**
+ * 18) Xóa nhà ga
+ */
+export const deleteStation = async (actor_user_id, code) => {
+  const result = await pool.query(
+    `SELECT api.fn_admin_delete_station_json($1, $2) AS result`,
+    [actor_user_id, code]
+  );
+  return unwrap(result);
+};
