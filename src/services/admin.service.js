@@ -205,3 +205,89 @@ export const getPayments = async (from_ts, to_ts, status_filter) => {
   return unwrap(result);
 };
 
+
+
+export const getDashboardStats = async () => {
+  // Gọi song song các hàm báo cáo có sẵn để lấy số liệu
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+  // 1. Doanh thu tháng này
+  const salesRes = await pool.query(
+    `SELECT api.fn_report_sales_json($1, $2) AS result`,
+    [firstDayOfMonth, today]
+  );
+  
+  // 2. Lượt khách hôm nay
+  const trafficRes = await pool.query(
+    `SELECT api.fn_report_traffic_json($1) AS result`,
+    [today]
+  );
+
+  // 3. Tổng vé đã quét (Đếm trong bảng validations)
+  // (Hoặc có thể viết thêm hàm SQL riêng, ở đây query trực tiếp cho nhanh)
+  const scanRes = await pool.query(`SELECT COUNT(*) FROM validations`);
+
+  // 4. Hoạt động gần đây (Lấy 5 dòng audit log mới nhất)
+  const auditRes = await pool.query(
+    `SELECT api.fn_admin_get_audit_json($1, $2, NULL) AS result`,
+    [firstDayOfMonth, new Date().toISOString()] // Lấy tạm trong tháng
+  );
+
+  return {
+    sales: salesRes.rows[0]?.result?.rows || [],
+    traffic: trafficRes.rows[0]?.result?.rows || [],
+    totalScans: scanRes.rows[0]?.count || 0,
+    recentLogs: auditRes.rows[0]?.result?.logs?.slice(0, 5) || [] // Lấy 5 dòng đầu
+  };
+};
+
+// ...
+/**
+ * 12) Báo cáo tỷ lệ vé
+ */
+export const reportTicketTypes = async (from_date, to_date) => {
+  const result = await pool.query(
+    `SELECT api.fn_report_ticket_types_json($1, $2) AS result`,
+    [from_date, to_date]
+  );
+  return unwrap(result);
+};
+
+/**
+ * 13) Lấy danh sách khuyến mãi (Đã chuẩn hóa)
+ */
+export const getPromotions = async () => {
+  // Gọi hàm trong DB thay vì viết SELECT *
+  const result = await pool.query(
+    `SELECT api.fn_admin_get_promotions_json() AS result`
+  );
+  return unwrap(result);
+};
+/**
+ * 16) Lấy danh sách thông báo (Đã chuẩn hóa gọi hàm DB)
+ */
+export const getAnnouncements = async () => {
+  // Gọi hàm SQL vừa tạo
+  const result = await pool.query(
+    `SELECT api.fn_admin_get_announcements_json() AS result`
+  );
+  return unwrap(result);
+};
+
+export const getFareRules = async () => {
+  const result = await pool.query(
+    `SELECT api.fn_admin_get_fare_rules_json() AS result`
+  );
+  return unwrap(result);
+};
+
+/**
+ * 15) Lấy Ticket Products (Dùng hàm SQL)
+ */
+export const getTicketProducts = async () => {
+  const result = await pool.query(
+    `SELECT api.fn_admin_get_ticket_products_json() AS result`
+  );
+  return unwrap(result);
+};

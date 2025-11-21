@@ -287,3 +287,82 @@ export const getPayments = async (req, res) => {
     return res.status(500).json({ ok: false, message: err.message });
   }
 };
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const data = await adminService.getDashboardStats();
+    
+    // Tính toán sơ bộ để trả về số tổng cho Frontend đỡ phải tính
+    const totalRevenue = data.sales.reduce((acc, curr) => acc + Number(curr.amount), 0);
+    const totalPassengers = data.traffic.reduce((acc, curr) => acc + Number(curr.validations_count), 0);
+
+    res.json({
+      success: true,
+      data: {
+        revenue: totalRevenue,
+        passengers: totalPassengers,
+        scans: Number(data.totalScans),
+        recentLogs: data.recentLogs
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+// ...
+export const reportTicketTypes = async (req, res) => {
+  try {
+    const { from_date, to_date } = req.query;
+    const result = await adminService.reportTicketTypes(from_date, to_date);
+    return res.json(result);
+  } catch (err) {
+    console.error("reportTicketTypes error:", err);
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+// ... (Các hàm khác giữ nguyên)
+
+/**
+ * 13) Lấy danh sách khuyến mãi
+ */
+export const getPromotions = async (req, res) => {
+  try {
+    // Service đã trả về { ok: true, data: [...] } từ DB
+    const result = await adminService.getPromotions(); 
+    return res.json(result); // Trả về luôn
+  } catch (err) {
+    console.error("getPromotions error:", err);
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+export const getAnnouncements = async (req, res) => {
+  try {
+    // Service đã trả về { ok: true, data: [...] } từ DB
+    const result = await adminService.getAnnouncements();
+    return res.json(result); 
+  } catch (err) {
+    console.error("getAnnouncements error:", err);
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+export const getFareRules = async (req, res) => {
+  try {
+    // Service đã trả về object { ok: true, data: [...] }
+    const result = await adminService.getFareRules();
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+export const getTicketProducts = async (req, res) => {
+  try {
+    const result = await adminService.getTicketProducts();
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};

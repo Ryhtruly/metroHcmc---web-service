@@ -12,6 +12,7 @@ router.post("/fare-rules", protect, adminOnly, adminController.setActiveFareRule
 router.post("/ticket-products", protect, adminOnly, adminController.upsertTicketProduct);
 router.post("/promotions", protect, adminOnly, adminController.upsertPromotion);
 router.post("/announcements", protect, adminOnly, adminController.upsertAnnouncement);
+router.get("/announcements", protect, adminOnly, adminController.getAnnouncements);
 
 // 2 API báo cáo
 router.get("/report/sales", protect, adminOnly, adminController.reportSales);
@@ -20,5 +21,15 @@ router.get("/report/traffic", protect, adminOnly, adminController.reportTraffic)
 // 2 API nhật ký
 router.get("/audit", protect, adminOnly, adminController.getAuditLog);
 router.get("/payments", protect, adminOnly, adminController.getPayments);
+// ...
+router.get('/dashboard-stats', protect, adminOnly, adminController.getDashboardStats);
+// ...
+router.get("/report/ticket-types", protect, adminOnly, adminController.reportTicketTypes);
+
+router.post("/promotions", protect, adminOnly, adminController.upsertPromotion); // Tạo/Sửa
+router.get("/promotions", protect, adminOnly, adminController.getPromotions);
+
+router.get("/fare-rules", protect, adminOnly, adminController.getFareRules);
+router.get("/ticket-products", protect, adminOnly, adminController.getTicketProducts);
 
 export default router;
