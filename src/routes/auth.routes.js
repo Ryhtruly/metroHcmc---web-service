@@ -9,4 +9,8 @@ router.post('/login', authController.loginUser);
 router.get('/announcements', authController.getPublicAnnouncements);
 router.get('/me', protect, authController.getMe);
 
+// New: Forgot and reset password
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
+
 export default router;

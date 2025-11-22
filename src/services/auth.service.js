@@ -19,8 +19,22 @@ const getAnnouncements = async () => {
   return rows[0].fn_get_announcements_json;
 };
 
+const forgotPassword = async (email) => {
+  const query = 'SELECT * FROM api.fn_auth_forgot_password_json($1)';
+  const { rows } = await pool.query(query, [email]);
+  return rows[0].fn_auth_forgot_password_json;
+};
+
+const resetPassword = async (token, newPassword) => {
+  const query = 'SELECT * FROM api.fn_auth_reset_password_json($1, $2)';
+  const { rows } = await pool.query(query, [token, newPassword]);
+  return rows[0].fn_auth_reset_password_json;
+};
+
 export const authService = {
   register,
   login,
   getAnnouncements,
-};
+  forgotPassword,
+  resetPassword,
+};;
