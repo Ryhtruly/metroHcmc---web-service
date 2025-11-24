@@ -175,10 +175,13 @@ export const reportSales = async (from_date, to_date) => {
 /**
  * 9) Báo cáo lưu lượng
  */
-export const reportTraffic = async (on_date) => {
+/**
+ * 9) Báo cáo lưu lượng (Sửa để nhận from_date, to_date)
+ */
+export const reportTraffic = async (from_date, to_date) => {
   const result = await pool.query(
-    `SELECT api.fn_report_traffic_json($1) AS result`,
-    [on_date]
+    `SELECT api.fn_report_traffic_json($1, $2) AS result`,
+    [from_date, to_date]
   );
   return unwrap(result);
 };
