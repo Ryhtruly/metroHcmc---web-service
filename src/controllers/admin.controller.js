@@ -237,15 +237,20 @@ export const reportSales = async (req, res) => {
   }
 };
 
-/**
+/*
  * 9) Báo cáo lưu lượng soát vé
- *   GET /api/admin/report/traffic?on_date=2025-01-01
+ * GET /api/admin/report/traffic?from_date=...&to_date=...
  */
 export const reportTraffic = async (req, res) => {
   try {
-    const { on_date } = req.query;
+    // Lấy from_date, to_date thay vì on_date
+    const { from_date, to_date } = req.query;
 
-    const result = await adminService.reportTraffic(on_date);
+    // Nếu thiếu thì mặc định lấy hôm nay
+    const start = from_date || new Date().toISOString().split('T')[0];
+    const end = to_date || new Date().toISOString().split('T')[0];
+
+    const result = await adminService.reportTraffic(start, end);
 
     return res.json(result);
   } catch (err) {
@@ -378,4 +383,24 @@ export const getTicketProducts = async (req, res) => {
   } catch (err) {
     return res.status(500).json({ ok: false, message: err.message });
   }
-};  
+};
+
+export const getAllStations = async (req, res) => {
+  try {
+    const result = await adminService.getAllStations();
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+export const deleteStation = async (req, res) => {
+  try {
+    const actor_user_id = req.user.user_id;
+    const { code } = req.params; // Lấy code từ URL
+    const result = await adminService.deleteStation(actor_user_id, code);
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};

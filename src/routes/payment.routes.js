@@ -1,6 +1,6 @@
 import express from 'express';
 import { paymentController } from '../controllers/payment.controller.js';
-import { protect, customerOnly } from '../middleware/authMiddleware.js'; // Giả sử Tình/Trí có 'customerOnly'
+import { protect, customerOnly } from '../middleware/authMiddleware.js'; 
 
 const router = express.Router();
 

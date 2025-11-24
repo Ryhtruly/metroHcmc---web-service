@@ -463,30 +463,12 @@ export const reportSales = async (from_date, to_date) => {
  * 9) Báo cáo lưu lượng
  */
 /**
- * @swagger
- * /api/admin/report/ticket-types:
- *   get:
- *     summary: Ticket type distribution
- *     tags: [Admin - Reports]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: from_date
- *         schema:
- *           type: string
- *       - in: query
- *         name: to_date
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Ticket type ratio
+ * 9) Báo cáo lưu lượng (Sửa để nhận from_date, to_date)
  */
-export const reportTraffic = async (on_date) => {
+export const reportTraffic = async (from_date, to_date) => {
   const result = await pool.query(
-    `SELECT api.fn_report_traffic_json($1) AS result`,
-    [on_date]
+    `SELECT api.fn_report_traffic_json($1, $2) AS result`,
+    [from_date, to_date]
   );
   return unwrap(result);
 };
@@ -647,6 +629,27 @@ export const getFareRules = async () => {
 export const getTicketProducts = async () => {
   const result = await pool.query(
     `SELECT api.fn_admin_get_ticket_products_json() AS result`
+  );
+  return unwrap(result);
+};
+
+/**
+ * 17) Lấy danh sách tất cả nhà ga
+ */
+export const getAllStations = async () => {
+  const result = await pool.query(
+    `SELECT api.fn_admin_get_stations_json() AS result`
+  );
+  return unwrap(result);
+};
+
+/**
+ * 18) Xóa nhà ga
+ */
+export const deleteStation = async (actor_user_id, code) => {
+  const result = await pool.query(
+    `SELECT api.fn_admin_delete_station_json($1, $2) AS result`,
+    [actor_user_id, code]
   );
   return unwrap(result);
 };
