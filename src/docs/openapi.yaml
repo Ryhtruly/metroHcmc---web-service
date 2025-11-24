@@ -1,0 +1,663 @@
+openapi: 3.0.0
+info:
+  title: Metro HCM API
+  description: API for Ho Chi Minh City Metro System
+  version: 1.0.0
+servers:
+  - url: /api
+tags:
+  - name: admin
+    description: Operations for administrators
+  - name: auth
+    description: Authentication endpoints
+  - name: payment
+    description: Payment processing
+  - name: scanner
+    description: Ticket scanning
+  - name: ticket
+    description: Public ticket and information endpoints
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /admin/lines:
+    post:
+      tags:
+        - admin
+      summary: Upsert a metro line
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                name:
+                  type: string
+                color_hex:
+                  type: string
+                state:
+                  type: boolean
+      responses:
+        '200':
+          description: Successful operation
+  /admin/stations:
+    post:
+      tags:
+        - admin
+      summary: Upsert a metro station
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                name:
+                  type: string
+                line_code:
+                  type: string
+                order_index:
+                  type: integer
+                lat:
+                  type: number
+                lon:
+                  type: number
+      responses:
+        '200':
+          description: Successful operation
+  /admin/segments:
+    post:
+      tags:
+        - admin
+      summary: Upsert a metro segment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                line_code:
+                  type: string
+                from_station:
+                  type: string
+                to_station:
+                  type: string
+                travel_min:
+                  type: integer
+      responses:
+        '200':
+          description: Successful operation
+  /admin/fare-rules:
+    post:
+      tags:
+        - admin
+      summary: Set active fare rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                line_code:
+                  type: string
+                base_price:
+                  type: number
+                base_stops:
+                  type: integer
+                step_stops:
+                  type: integer
+                step_price:
+                  type: number
+      responses:
+        '200':
+          description: Successful operation
+    get:
+      tags:
+        - admin
+      summary: Get all fare rules
+      responses:
+        '200':
+          description: Successful operation
+  /admin/ticket-products:
+    post:
+      tags:
+        - admin
+      summary: Upsert a ticket product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                name_vi:
+                  type: string
+                type:
+                  type: string
+                price:
+                  type: number
+                duration_hours:
+                  type: integer
+                auto_activate_after_days:
+                  type: integer
+                state:
+                  type: boolean
+      responses:
+        '200':
+          description: Successful operation
+    get:
+      tags:
+        - admin
+      summary: Get all ticket products
+      responses:
+        '200':
+          description: Successful operation
+  /admin/promotions:
+    post:
+      tags:
+        - admin
+      summary: Upsert a promotion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                promo_type:
+                  type: string
+                discount_percent:
+                  type: number
+                discount_amount:
+                  type: number
+                starts_at:
+                  type: string
+                  format: date-time
+                ends_at:
+                  type: string
+                  format: date-time
+                min_order_amount:
+                  type: number
+                state:
+                  type: boolean
+      responses:
+        '200':
+          description: Successful operation
+    get:
+      tags:
+        - admin
+      summary: Get all promotions
+      responses:
+        '200':
+          description: Successful operation
+  /admin/announcements:
+    post:
+      tags:
+        - admin
+      summary: Upsert an announcement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content_md:
+                  type: string
+                visible_from:
+                  type: string
+                  format: date-time
+                visible_to:
+                  type: string
+                  format: date-time
+                is_active:
+                  type: boolean
+                ann_id:
+                  type: integer
+      responses:
+        '200':
+          description: Successful operation
+    get:
+      tags:
+        - admin
+      summary: Get all announcements
+      responses:
+        '200':
+          description: Successful operation
+  /admin/report/sales:
+    get:
+      tags:
+        - admin
+      summary: Get sales report
+      parameters:
+        - name: from_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successful operation
+  /admin/report/traffic:
+    get:
+      tags:
+        - admin
+      summary: Get traffic report
+      parameters:
+        - name: on_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successful operation
+  /admin/audit:
+    get:
+      tags:
+        - admin
+      summary: Get audit log
+      parameters:
+        - name: from_ts
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: to_ts
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: action
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+  /admin/payments:
+    get:
+      tags:
+        - admin
+      summary: Get payments
+      parameters:
+        - name: from_ts
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: to_ts
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+  /admin/dashboard-stats:
+    get:
+      tags:
+        - admin
+      summary: Get dashboard stats
+      responses:
+        '200':
+          description: Successful operation
+  /admin/report/ticket-types:
+    get:
+      tags:
+        - admin
+      summary: Get ticket types report
+      parameters:
+        - name: from_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successful operation
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                displayName:
+                  type: string
+      responses:
+        '201':
+          description: User registered successfully
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: Login a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: User logged in successfully
+  /auth/announcements:
+    get:
+      tags:
+        - auth
+      summary: Get public announcements
+      responses:
+        '200':
+          description: Successful operation
+  /auth/me:
+    get:
+      tags:
+        - auth
+      summary: Get current user
+      responses:
+        '200':
+          description: Successful operation
+  /auth/forgot-password:
+    post:
+      tags:
+        - auth
+      summary: Forgot password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+  /auth/reset-password:
+    post:
+      tags:
+        - auth
+      summary: Reset password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                new_password:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+  /payment/create:
+    post:
+      tags:
+        - payment
+      summary: Create a payment request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticket_id:
+                  type: integer
+                method:
+                  type: string
+      responses:
+        '201':
+          description: Payment request created successfully
+  /payment/create-demo:
+    post:
+      tags:
+        - payment
+      summary: Create a demo payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticket_id:
+                  type: integer
+                method:
+                  type: string
+      responses:
+        '201':
+          description: Demo payment created successfully
+  /payment/confirm-webhook:
+    post:
+      tags:
+        - payment
+      summary: Confirm payment webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Successful operation
+  /scanner/scan:
+    post:
+      tags:
+        - scanner
+      summary: Scan a ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                qr_code:
+                  type: string
+                station_code:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+  /ticket/lines:
+    get:
+      tags:
+        - ticket
+      summary: Get all lines
+      responses:
+        '200':
+          description: Successful operation
+  /ticket/lines/{line_code}/stations:
+    get:
+      tags:
+        - ticket
+      summary: Get stations for a line
+      parameters:
+        - name: line_code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+  /ticket/quote/single:
+    post:
+      tags:
+        - ticket
+      summary: Quote a single ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                line_code:
+                  type: string
+                from_station:
+                  type: string
+                to_station:
+                  type: string
+                promo_code:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+  /ticket/single:
+    post:
+      tags:
+        - ticket
+      summary: Create a single ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                line_code:
+                  type: string
+                from_station:
+                  type: string
+                to_station:
+                  type: string
+                stops:
+                  type: integer
+                final_price:
+                  type: number
+                promo_code:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+  /ticket/pass:
+    post:
+      tags:
+        - ticket
+      summary: Create a pass ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_code:
+                  type: string
+                promo_code:
+                  type: string
+      responses:
+        '200':
+          description: Successful operation
+  /ticket/my-tickets:
+    get:
+      tags:
+        - ticket
+      summary: Get my tickets
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+  /ticket/{id}:
+    get:
+      tags:
+        - ticket
+      summary: Get ticket detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+  /health:
+    get:
+      tags:
+        - monitoring
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                  message:
+                    type: string
+                    example: Service is healthy

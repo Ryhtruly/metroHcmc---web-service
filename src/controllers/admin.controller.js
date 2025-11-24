@@ -288,6 +288,9 @@ export const getPayments = async (req, res) => {
   }
 };
 
+/**
+ * 12)
+ */
 export const getDashboardStats = async (req, res) => {
   try {
     const data = await adminService.getDashboardStats();
@@ -309,7 +312,8 @@ export const getDashboardStats = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-// ...
+
+// 13)
 export const reportTicketTypes = async (req, res) => {
   try {
     const { from_date, to_date } = req.query;
@@ -324,7 +328,7 @@ export const reportTicketTypes = async (req, res) => {
 // ... (Các hàm khác giữ nguyên)
 
 /**
- * 13) Lấy danh sách khuyến mãi
+ * 14) Lấy danh sách khuyến mãi
  */
 export const getPromotions = async (req, res) => {
   try {
@@ -337,6 +341,9 @@ export const getPromotions = async (req, res) => {
   }
 };
 
+/**
+ * 15)
+ */
 export const getAnnouncements = async (req, res) => {
   try {
     // Service đã trả về { ok: true, data: [...] } từ DB
@@ -348,6 +355,9 @@ export const getAnnouncements = async (req, res) => {
   }
 };
 
+/**
+ * 16)
+ */
 export const getFareRules = async (req, res) => {
   try {
     // Service đã trả về object { ok: true, data: [...] }
@@ -358,6 +368,9 @@ export const getFareRules = async (req, res) => {
   }
 };
 
+/**
+ * 17)
+ */
 export const getTicketProducts = async (req, res) => {
   try {
     const result = await adminService.getTicketProducts();
@@ -365,4 +378,4 @@ export const getTicketProducts = async (req, res) => {
   } catch (err) {
     return res.status(500).json({ ok: false, message: err.message });
   }
-};
+};  

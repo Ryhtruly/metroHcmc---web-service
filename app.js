@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 
+// gen swagger api
+import { swaggerDocs } from "./src/docs/swagger.js";
+
 // 1. Kết nối DB
 import './src/config/db.js';
 
@@ -13,6 +16,9 @@ import ticketRoutes from './src/routes/ticket.routes.js';
 import { startBatchJobs } from './src/services/batch.service.js';
 
 const app = express();
+
+// swagger
+swaggerDocs(app);
 
 // Middleware
 app.use(cors());
@@ -32,6 +38,11 @@ startBatchJobs();
 // Route kiểm tra
 app.get('/', (req, res) => {
   res.send('🚀 Metro Web Service is running...');
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'UP', message: 'Service is healthy' });
 });
 
 // Error Handler
