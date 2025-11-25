@@ -20,6 +20,25 @@ const ticketController = {
     }
   },
 
+  getProducts: async (req, res) => {
+    try {
+      // Hàm này giờ đã gọi đúng Function SQL
+      const data = await ticketService.getTicketProducts(); 
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  },
+
+  getProducts: async (req, res) => {
+    try {
+      const data = await ticketService.getTicketProducts();
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  },
+
   quoteSingle: async (req, res) => {
     try {
       const { line_code, from_station, to_station, promo_code } = req.body;

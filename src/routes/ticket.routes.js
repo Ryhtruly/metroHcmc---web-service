@@ -4,12 +4,20 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Public
+// ==============================
+// 🔓 PUBLIC (Không cần Token)
+// ==============================
 router.get('/lines', ticketController.getLines);
 router.get('/lines/:line_code/stations', ticketController.getStations);
 router.post('/quote/single', ticketController.quoteSingle);
 
-// Protected
+// 👇 QUAN TRỌNG: Đảm bảo dòng này KHÔNG CÓ chữ 'protect'
+router.get('/products', ticketController.getProducts); 
+
+
+// ==============================
+// 🔒 PROTECTED (Cần Token)
+// ==============================
 router.post('/single', protect, ticketController.createSingle);
 router.post('/pass', protect, ticketController.createPass);
 router.get('/my-tickets', protect, ticketController.getMyTickets);

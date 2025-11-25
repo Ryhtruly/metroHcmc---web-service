@@ -20,6 +20,19 @@ const ticketService = {
     return unwrap(result, 'fn_get_stations_json');
   },
 
+  getTicketProducts: async () => {
+    const query = "SELECT * FROM api.fn_get_active_ticket_products_json()";
+    const result = await pool.query(query);
+    return unwrap(result, 'fn_get_active_ticket_products_json');
+  },
+
+  getTicketProducts: async () => {
+    // Gọi hàm SQL vừa tạo ở Bước 1
+    const query = "SELECT * FROM api.fn_get_active_ticket_products_json()";
+    const result = await pool.query(query);
+    return unwrap(result, 'fn_get_active_ticket_products_json');
+  },
+
   quoteSingleTicket: async (lineCode, fromStation, toStation, promoCode) => {
     const query = "SELECT * FROM api.fn_quote_single_json($1, $2, $3, $4)";
     const result = await pool.query(query, [lineCode, fromStation, toStation, promoCode]);
