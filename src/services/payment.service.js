@@ -16,10 +16,17 @@ const getTicketDetails = async (ticket_id) => {
     const query = 'SELECT * FROM api.fn_get_ticket_json($1)';
     const { rows } = await pool.query(query, [ticket_id]);
     return rows[0].fn_get_ticket_json;
-  };
+};
+
+const failPayment = async (payment_id) => {
+  const query = 'SELECT * FROM api.fn_fail_payment_json($1)';
+  const { rows } = await pool.query(query, [payment_id]);
+  return rows[0].fn_fail_payment_json;
+};
 
 export const paymentService = {
   createPayment,
   confirmPayment,
   getTicketDetails,
+  failPayment,
 };

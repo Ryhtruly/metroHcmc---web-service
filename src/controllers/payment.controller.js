@@ -2,50 +2,77 @@ import crypto from 'crypto';
 import { paymentService } from '../services/payment.service.js';
 import { payos } from '../config/payos.js';
 
-const CLIENT_URL = process.env.CLIENT_APP_URL || 'http://localhost:3001';
+const handlePayOSCancel = async (req, res) => {
+  try {
+    const { orderCode, redirect } = req.query; // PayOS trả về ?orderCode=...
+
+    if (orderCode) {
+      // 1. Gọi DB để hủy vé và payment
+      await paymentService.failPayment(orderCode);
+      console.log(`[PayOS] User cancelled order ${orderCode}. DB updated.`);
+    }
+
+    // 2. Điều hướng về App Mobile
+    if (redirect) {
+      res.redirect(decodeURIComponent(redirect));
+    } else {
+      res.redirect('metroapp://payment-cancel'); // Fallback
+    }
+    
+  } catch (err) {
+    console.error("Cancel Error:", err);
+    res.status(500).send("Lỗi xử lý hủy thanh toán");
+  }
+};
 
 const createPaymentRequest = async (req, res) => {
   try {
-    const { ticket_id, method = 'PAYOS' } = req.body; // Lấy ticket_id từ body
-    // Không lấy 'amount' từ client, mà sẽ lấy từ DB thông qua ticket_id để tránh client giả mạo số tiền
+    const { ticket_id, method = 'PAYOS', returnUrl, cancelUrl } = req.body; 
 
-    // 1. Lấy thông tin vé 
+    // 1. Lấy thông tin vé & Validate
     const ticketResponse = await paymentService.getTicketDetails(ticket_id);
-
-    if (ticketResponse.error) {
-      return res.status(404).json({ success: false, message: ticketResponse.error });
-    }
+    if (ticketResponse.error) return res.status(404).json({ success: false, message: ticketResponse.error });
+    
     const ticketDetails = ticketResponse.data;
-
     if (ticketDetails.status !== 'NEW') {
-      return res.status(400).json({ success: false, message: 'Vé đã được thanh toán hoặc không ở trạng thái MỚI.' });
+      return res.status(400).json({ success: false, message: 'Vé không hợp lệ.' });
     }
     
-    // Lấy giá an toàn từ DB
-    const amount = ticketDetails.final_price;
+    const amount = Number(ticketDetails.final_price);
 
-    // 2. Tạo bản ghi thanh toán PENDING trong DB
+    // 2. Tạo payment PENDING
     const dbResponse = await paymentService.createPayment(ticket_id, method, amount);
-    
-    if (!dbResponse.success) {
-      return res.status(400).json(dbResponse);
-    }
+    if (!dbResponse.success) return res.status(400).json(dbResponse);
 
     const payment_id = dbResponse.payment.payment_id; 
     const orderCode = parseInt(payment_id); 
 
-    // 3. Tạo link thanh toán PayOS
-    const description = `Thanh toan ve Metro HCM ${ticket_id}`;
-    const returnUrl = `${CLIENT_URL}/payment/success?orderCode=${orderCode}`;
-    const cancelUrl = `${CLIENT_URL}/payment/cancel?orderCode=${orderCode}`;
+    // 3. Cấu hình URL cho PayOS
+    // - Thành công: Về thẳng App Mobile (clientReturnUrl gửi từ App lên)
+    const backendHost = `${req.protocol}://${req.get('host')}`;
+    
+    // Nếu Mobile không gửi (test postman) thì fallback về metroapp://
+    const mobileCancelLink = cancelUrl || 'metroapp://payment-cancel';
+    
+    // URL này: PayOS -> Backend (xử lý DB) -> Redirect về Mobile
+    const serverCancelUrl = `${backendHost}/api/payments/payos-cancel?orderCode=${orderCode}&redirect=${encodeURIComponent(mobileCancelLink)}`;
 
-    const link = await payos.paymentRequests.create({
+    const payload = {
       orderCode,
       amount: Number(amount),
-      description,
-      returnUrl,
-      cancelUrl,
-    });
+      description: `TT Metro ${orderCode}`.substring(0, 25),
+      returnUrl: returnUrl, // Thành công thì PayOS cho về thẳng App luôn
+      cancelUrl: serverCancelUrl, // Hủy thì qua Server xử lý trước
+    };
+
+    console.log("---- [PAYOS REQUEST] ----");
+    console.log("Cancel URL:", cancelUrl); // Log để kiểm tra IP
+
+    const link = await payos.paymentRequests.create(payload);
+
+    if (!link || !link.checkoutUrl) {
+      throw new Error("PayOS không trả về link thanh toán.");
+    }
 
     res.status(201).json({
       success: true,
@@ -56,6 +83,7 @@ const createPaymentRequest = async (req, res) => {
     });
 
   } catch (err) {
+    console.error("PayOS Create Error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -199,4 +227,5 @@ export const paymentController = {
   createPaymentRequest,
   confirmPaymentWebhook,
   createPaymentDemo, 
+  handlePayOSCancel,
 };
