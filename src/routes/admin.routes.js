@@ -1,6 +1,8 @@
 import express from "express";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 import * as adminController from "../controllers/admin.controller.js";
+import * as promoController from "../controllers/promo.controller.js"; 
+
 
 const router = express.Router();
 
@@ -35,5 +37,9 @@ router.get("/ticket-products", protect, adminOnly, adminController.getTicketProd
 // API Ga
 router.get("/stations", protect, adminOnly, adminController.getAllStations); 
 router.delete("/stations/:code", protect, adminOnly, adminController.deleteStation); 
+
+// api giftcodes
+router.post("/giftcodes/batch", protect, adminOnly, adminController.createGiftcodeBatch);
+router.get("/giftcodes", protect, adminOnly, adminController.getGiftcodes);
 
 export default router;

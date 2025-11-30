@@ -13,6 +13,7 @@ import paymentRoutes from './src/routes/payment.routes.js';
 import scannerRoutes from './src/routes/scanner.routes.js';
 import adminRoutes from './src/routes/admin.routes.js';
 import ticketRoutes from './src/routes/ticket.routes.js';
+import promoRoutes from './src/routes/promo.routes.js';
 import { startBatchJobs } from './src/services/batch.service.js';
 
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/scanner', scannerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/giftcodes', promoRoutes);
 
 // 5. Khởi động Batch Jobs
 startBatchJobs();

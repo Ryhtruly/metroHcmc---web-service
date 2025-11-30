@@ -385,6 +385,63 @@ export const getTicketProducts = async (req, res) => {
   }
 };
 
+/**
+ * 18) Tạo batch Giftcode (Admin)
+ * POST /api/admin/giftcodes/batch
+ */
+export const createGiftcodeBatch = async (req, res) => {
+  try {
+    const actor_user_id = req.user.user_id;
+
+    const {
+      prefix,
+      quantity,
+      reward_type,
+      ticket_type_id,
+      discount_amount,
+      discount_percent,
+      expires_at,
+    } = req.body;
+
+    const result = await adminService.createGiftcodeBatch(
+      actor_user_id,
+      prefix,
+      quantity,
+      reward_type,
+      ticket_type_id,
+      discount_amount,
+      discount_percent,
+      expires_at
+    );
+
+    return res.json({
+      ok: true,
+      message: "Tạo giftcode thành công",
+      data: result
+    });
+
+  } catch (err) {
+    console.error("createGiftcodeBatch error:", err);
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+
+
+/**
+ * 19) Lấy danh sách Giftcode
+ * GET /api/admin/giftcodes
+ */
+export const getGiftcodes = async (req, res) => {
+  try {
+    const result = await adminService.getGiftcodes();
+    return res.json(result);
+  } catch (err) {
+    console.error("getGiftcodes error:", err);
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
 export const getAllStations = async (req, res) => {
   try {
     const result = await adminService.getAllStations();
@@ -404,3 +461,4 @@ export const deleteStation = async (req, res) => {
     return res.status(500).json({ ok: false, message: err.message });
   }
 };
+
