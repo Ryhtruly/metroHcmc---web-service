@@ -6,7 +6,7 @@ import './src/config/db.js';
 
 // 2. Import Routes
 import authRoutes from './src/routes/auth.routes.js';
-import paymentRoutes from './src/routes/payment.routes.js';
+// import paymentRoutes from './src/routes/payment.routes.js';
 import scannerRoutes from './src/routes/scanner.routes.js';
 import adminRoutes from './src/routes/admin.routes.js';
 import ticketRoutes from './src/routes/ticket.routes.js';
@@ -17,12 +17,12 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: true })); 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // 4. Đăng ký Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/payments', paymentRoutes);
+// app.use('/api/payments', paymentRoutes);
 app.use('/api/scanner', scannerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/tickets', ticketRoutes);
@@ -39,10 +39,10 @@ app.get('/', (req, res) => {
 // Error Handler
 app.use((err, req, res, next) => {
   console.error('❌ Server Error:', err.stack);
-  res.status(500).json({ 
-    success: false, 
-    message: 'Internal Server Error', 
-    error: err.message 
+  res.status(500).json({
+    success: false,
+    message: 'Internal Server Error',
+    error: err.message
   });
 });
 

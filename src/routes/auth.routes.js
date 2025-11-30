@@ -1,6 +1,6 @@
 import express from 'express';
 import { authController } from '../controllers/auth.controller.js';
-import { protect } from '../middleware/authMiddleware.js'; 
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -9,6 +9,7 @@ router.post('/register', authController.registerUser);
 router.post('/login', authController.loginUser);
 router.get('/announcements', authController.getPublicAnnouncements);
 router.get('/me', protect, authController.getMe); // Cần token đăng nhập
+router.put('/me', protect, authController.updateMe);
 
 // Các route Quên mật khẩu (Public - Không cần token đăng nhập)
 router.post('/forgot-password', authController.forgotPassword);

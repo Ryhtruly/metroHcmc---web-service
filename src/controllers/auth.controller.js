@@ -4,11 +4,11 @@ const registerUser = async (req, res) => {
   try {
     const { email, password, displayName } = req.body;
     const dbResponse = await authService.register(email, password, displayName);
-    
+
     if (dbResponse.success) {
-      res.status(201).json(dbResponse); 
+      res.status(201).json(dbResponse);
     } else {
-      res.status(400).json(dbResponse); 
+      res.status(400).json(dbResponse);
     }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -21,9 +21,9 @@ const loginUser = async (req, res) => {
     const dbResponse = await authService.login(email, password);
 
     if (dbResponse.success) {
-      res.status(200).json(dbResponse); 
+      res.status(200).json(dbResponse);
     } else {
-      res.status(401).json(dbResponse); 
+      res.status(401).json(dbResponse);
     }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -43,6 +43,35 @@ const getPublicAnnouncements = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+const updateMe = async (req, res) => {
+  try {
+    const userId = req.user.user_id; // đã có từ middleware protect
+    const { display_name } = req.body; // hoặc displayName tuỳ bạn
+
+    if (!display_name || !display_name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tên hiển thị không được để trống',
+      });
+    }
+
+    const dbResponse = await authService.updateDisplayName(
+      userId,
+      display_name.trim()
+    );
+
+    if (!dbResponse.success) {
+      return res.status(400).json(dbResponse);
+    }
+
+    return res.status(200).json(dbResponse); // { success: true, user: {...} }
+  } catch (err) {
+    console.error('updateMe error:', err);
+    return res
+      .status(500)
+      .json({ success: false, message: 'Internal server error' });
+  }
+};
 
 // --- 👇 Chức năng Quên mật khẩu & Reset mật khẩu 👇 ---
 
@@ -50,10 +79,9 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const dbResponse = await authService.forgotPassword(email);
-    
+
     if (dbResponse.success) {
-      // Trong thực tế: Gửi email chứa link reset tại đây.
-      // Demo: Trả về token luôn để Frontend tự chuyển trang.
+      // Demo: trả về thẳng mật khẩu tạm & token
       res.status(200).json(dbResponse);
     } else {
       res.status(400).json(dbResponse);
@@ -67,7 +95,7 @@ const resetPassword = async (req, res) => {
   try {
     const { token, new_password } = req.body;
     const dbResponse = await authService.resetPassword(token, new_password);
-    
+
     if (dbResponse.success) {
       res.status(200).json(dbResponse);
     } else {
@@ -85,4 +113,5 @@ export const authController = {
   getPublicAnnouncements,
   forgotPassword, // Mới
   resetPassword,  // Mới
+  updateMe,
 };
