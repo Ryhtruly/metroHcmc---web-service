@@ -386,47 +386,63 @@ export const getTicketProducts = async (req, res) => {
 };
 
 /**
- * 18) Tạo batch Giftcode (Admin)
- * POST /api/admin/giftcodes/batch
+ * 18) Tạo/Cập nhật Giftcode (Admin)
+ * POST /api/admin/giftcodes/batch (Tạo mới)
+ * PUT /api/admin/giftcodes/:promo_id (Cập nhật)
  */
-export const createGiftcodeBatch = async (req, res) => {
+// ĐÃ ĐỔI TÊN HÀM TỪ createGiftcodeBatch sang upsertGiftcode
+export const upsertGiftcode = async (req, res) => { 
   try {
-    const actor_user_id = req.user.user_id;
+    // const actor_user_id = req.user.user_id; // Giả định lấy ID người dùng từ token
+    
+    // LẤY ID TỪ URL (Chỉ có khi là PUT)
+    const promo_id_from_url = req.params.promo_id || null; 
 
+    // LẤY CÁC THAM SỐ CẦN THIẾT
+    // LƯU Ý: Frontend gửi 'code' (Prefix) và 'ticket_product_code'
     const {
-      prefix,
-      quantity,
-      reward_type,
-      ticket_type_id,
-      discount_amount,
-      discount_percent,
-      expires_at,
+      prefix,                    
+      quantity,                  
+      ticket_product_code,       
+      max_usage,                 
+      starts_at,                 
+      is_active,                 
     } = req.body;
 
-    const result = await adminService.createGiftcodeBatch(
-      actor_user_id,
+    // QUYẾT ĐỊNH ID CUỐI CÙNG (Ưu tiên ID từ URL khi sửa)
+    // Khi POST, final_promo_id LUÔN LÀ NULL
+    const final_promo_id = promo_id_from_url || null; 
+
+    // Gọi service với các tham số đã cập nhật
+    const result = await adminService.upsertGiftcode(
+      final_promo_id,
       prefix,
       quantity,
-      reward_type,
-      ticket_type_id,
-      discount_amount,
-      discount_percent,
-      expires_at
+      ticket_product_code,
+      max_usage,
+      starts_at,
+      is_active
     );
+    
+    let message = "Thao tác thành công.";
+
+    if (result.count) {
+        message = `Đã tạo thành công ${result.count} mã giftcode.`;
+    } else if (result.promo_id) {
+        message = "Cập nhật mã giftcode thành công.";
+    }
 
     return res.json({
       ok: true,
-      message: "Tạo giftcode thành công",
+      message: message,
       data: result
     });
 
   } catch (err) {
-    console.error("createGiftcodeBatch error:", err);
+    console.error("upsertGiftcode error:", err);
     return res.status(500).json({ ok: false, message: err.message });
   }
 };
-
-
 
 /**
  * 19) Lấy danh sách Giftcode

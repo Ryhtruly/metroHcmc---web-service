@@ -27,7 +27,7 @@ app.use(cors());
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
 
-// 4. Đăng ký Routes
+// 4. Đăng ký Đường dẫn Cơ sở
 app.use('/api/auth', authRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/scanner', scannerRoutes);

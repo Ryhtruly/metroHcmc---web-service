@@ -39,7 +39,11 @@ router.get("/stations", protect, adminOnly, adminController.getAllStations);
 router.delete("/stations/:code", protect, adminOnly, adminController.deleteStation); 
 
 // api giftcodes
-router.post("/giftcodes/batch", protect, adminOnly, adminController.createGiftcodeBatch);
+router.post("/giftcodes/batch", protect, adminOnly, adminController.upsertGiftcode); 
 router.get("/giftcodes", protect, adminOnly, adminController.getGiftcodes);
+
+// Cập nhật giftcode
+router.put("/giftcodes/:promo_id", protect, adminOnly, adminController.upsertGiftcode);
+
 
 export default router;

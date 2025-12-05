@@ -314,39 +314,58 @@
   };
 
 /**
- * 19) Tạo batch Giftcode
- * Hàm này gọi PostgreSQL function api.fn_admin_create_giftcode_json(...)
+ * 19) Tạo/Cập nhật Giftcode (UPSERT)
+ * Hàm này gọi PostgreSQL function api.fn_admin_upsert_giftcode_json(...)
+ * @param {string | null} promo_id - ID mã khuyến mãi (NULL khi tạo mới)
+ * @param {string} prefix - Prefix mã (hoặc Mã code khi sửa)
+ * @param {number} quantity - Số lượng mã cần tạo (Chỉ dùng khi tạo mới)
+ * @param {string} ticket_product_code - MÃ CODE sản phẩm vé
+ * @param {number} max_usage - Số lần sử dụng tối đa/mã
+ * @param {string} starts_at - Ngày bắt đầu (ISO string)
+ * @param {boolean} is_active - Trạng thái kích hoạt
  */
-export const createGiftcodeBatch = async (
-  actor_user_id,
+export const upsertGiftcode = async ( 
+  promo_id,
   prefix,
   quantity,
-  reward_type,
-  ticket_type_id,
-  discount_amount,
-  discount_percent,
-  expires_at
+  ticket_product_code,
+  max_usage,
+  starts_at,
+  is_active
 ) => {
+  
+  // KHẮC PHỤC LỖI: final_promo_id phải là NULL khi POST
+  const final_promo_id = promo_id || null;
+
+  // LƯU Ý: Lỗi BIGINT thường do tham số INT/BIGINT nhận nhầm UUID.
+  // Chúng ta ép kiểu tường minh trong Service để giải quyết lỗi 42883 (signature)
+  // và lỗi 22P02 (invalid syntax).
+
   const result = await pool.query(
-    `SELECT api.fn_admin_create_giftcode_json(
-        $1,$2,$3,$4,$5,$6,$7,$8
+    // ÉP KIỂU TƯỜNG MINH CHO TẤT CẢ 7 THAM SỐ
+    `SELECT api.fn_admin_upsert_giftcode_json(
+        $1::uuid, $2::text, $3::integer, $4::text, $5::integer, $6::timestamp, $7::boolean
      ) AS result`,
     [
-      actor_user_id,
-      prefix,
+      // $1: p_promo_id (UUID - NULL/UUID)
+      final_promo_id, 
+      // $2: p_prefix (TEXT)
+      prefix, 
+      // $3: p_quantity (INTEGER)
       quantity,
-      reward_type,
-      ticket_type_id,
-      discount_amount,
-      discount_percent,
-      expires_at,
+      // $4: p_ticket_product_code (TEXT)
+      ticket_product_code, 
+      // $5: p_max_usage (INTEGER)
+      max_usage, 
+      // $6: p_starts_at (TIMESTAMP)
+      starts_at,
+      // $7: p_is_active (BOOLEAN)
+      is_active, 
     ]
   );
 
-  return unwrap(result);
+  return unwrap(result); 
 };
-
-
 
 /**
  * 20) Lấy danh sách Giftcodes
