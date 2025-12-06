@@ -2,19 +2,53 @@ import { authService } from '../services/auth.service.js';
 
 const registerUser = async (req, res) => {
   try {
-    const { email, password, displayName } = req.body;
-    const dbResponse = await authService.register(email, password, displayName);
+    const {
+      email,
+      password,
+      display_name,
+      phone_number,
+      address,
+      cccd,
+      birth_date
+    } = req.body;
+
+    // Log để debug
+    console.log('Register request data:', req.body);
+
+    // Validate bắt buộc
+    if (!email || !password || !display_name) {
+      return res.status(400).json({
+        success: false,
+        error_code: 'MISSING_REQUIRED_FIELDS',
+        message: 'Email, mật khẩu và họ tên là bắt buộc'
+      });
+    }
+
+    const dbResponse = await authService.register(
+      email,
+      password,
+      display_name,
+      phone_number,
+      address,
+      cccd,
+      birth_date
+    );
 
     if (dbResponse.success) {
+      // Set cookie hoặc header nếu cần
       res.status(201).json(dbResponse);
     } else {
       res.status(400).json(dbResponse);
     }
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('Controller registration error:', err);
+    res.status(500).json({
+      success: false,
+      error_code: 'SERVER_ERROR',
+      message: 'Lỗi server khi đăng ký'
+    });
   }
 };
-
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -43,21 +77,28 @@ const getPublicAnnouncements = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+// Controller updateMe
 const updateMe = async (req, res) => {
   try {
     const userId = req.user.user_id; // đã có từ middleware protect
-    const { display_name } = req.body; // hoặc displayName tuỳ bạn
+    const { display_name, phone_number, address, cccd, birth_date } = req.body;
 
-    if (!display_name || !display_name.trim()) {
+    // Kiểm tra xem tên hiển thị có hợp lệ không
+    if (display_name && !display_name.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Tên hiển thị không được để trống',
       });
     }
 
-    const dbResponse = await authService.updateDisplayName(
+    // Gọi service để cập nhật thông tin người dùng
+    const dbResponse = await authService.updateUserProfile(
       userId,
-      display_name.trim()
+      display_name?.trim(),
+      phone_number?.trim(),
+      address?.trim(),
+      cccd?.trim(),
+      birth_date
     );
 
     if (!dbResponse.success) {
@@ -72,6 +113,7 @@ const updateMe = async (req, res) => {
       .json({ success: false, message: 'Internal server error' });
   }
 };
+
 
 // --- 👇 Chức năng Quên mật khẩu & Reset mật khẩu 👇 ---
 
@@ -91,10 +133,13 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+
+
 const resetPassword = async (req, res) => {
   try {
-    const { token, new_password } = req.body;
-    const dbResponse = await authService.resetPassword(token, new_password);
+    const { token, old_password, new_password } = req.body; // thêm old_password
+
+    const dbResponse = await authService.resetPassword(token, old_password, new_password);
 
     if (dbResponse.success) {
       res.status(200).json(dbResponse);
@@ -105,6 +150,7 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 export const authController = {
   registerUser,
