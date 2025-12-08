@@ -324,57 +324,57 @@
  * @param {string} starts_at - Ngày bắt đầu (ISO string)
  * @param {boolean} is_active - Trạng thái kích hoạt
  */
-export const upsertGiftcode = async ( 
-  promo_id,
-  prefix,
-  quantity,
-  ticket_product_code,
-  max_usage,
-  starts_at,
-  is_active
-) => {
+// src/services/admin.service.js
+
+export const upsertGiftcode = async (promoId, prefix, quantity, ticketProductCode, maxUsage, startsAt, expiresAt, isActive) => {
+  // Query gọi hàm SQL mới (7 tham số)
+  // LƯU Ý: Thứ tự tham số ở đây phải khớp 100% với hàm SQL bên trên
+  const query = `
+    SELECT api.fn_admin_upsert_giftcode_json(
+      $1::uuid, $2::text, $3::integer, $4::text, $5::integer, $6::timestamp, $7::timestamp, $8::boolean
+    ) AS result
+  `;
   
-  // KHẮC PHỤC LỖI: final_promo_id phải là NULL khi POST
-  const final_promo_id = promo_id || null;
+  const values = [
+    promoId || null,
+    prefix,
+    quantity,
+    ticketProductCode,
+    maxUsage,
+    startsAt || null,
+    expiresAt || null, // <--- THÊM THAM SỐ NÀY
+    isActive
+  ];
 
-  // LƯU Ý: Lỗi BIGINT thường do tham số INT/BIGINT nhận nhầm UUID.
-  // Chúng ta ép kiểu tường minh trong Service để giải quyết lỗi 42883 (signature)
-  // và lỗi 22P02 (invalid syntax).
-
-  const result = await pool.query(
-    // ÉP KIỂU TƯỜNG MINH CHO TẤT CẢ 7 THAM SỐ
-    `SELECT api.fn_admin_upsert_giftcode_json(
-        $1::uuid, $2::text, $3::integer, $4::text, $5::integer, $6::timestamp, $7::boolean
-     ) AS result`,
-    [
-      // $1: p_promo_id (UUID - NULL/UUID)
-      final_promo_id, 
-      // $2: p_prefix (TEXT)
-      prefix, 
-      // $3: p_quantity (INTEGER)
-      quantity,
-      // $4: p_ticket_product_code (TEXT)
-      ticket_product_code, 
-      // $5: p_max_usage (INTEGER)
-      max_usage, 
-      // $6: p_starts_at (TIMESTAMP)
-      starts_at,
-      // $7: p_is_active (BOOLEAN)
-      is_active, 
-    ]
-  );
-
-  return unwrap(result); 
+  const result = await pool.query(query, values);
+  return result.rows[0]?.result ?? null;
 };
 
 /**
  * 20) Lấy danh sách Giftcodes
  * Gọi PostgreSQL function api.fn_admin_get_giftcodes_json()
  */
+/**
+ * 20) Lấy danh sách Giftcodes
+ */
 export const getGiftcodes = async () => {
+  // Gọi hàm SQL
   const result = await pool.query(
-    `SELECT api.fn_admin_get_giftcodes_json() AS result`
+    `SELECT api.fn_admin_get_giftcodes_json(100, 0) AS result`
   );
 
-  return unwrap(result);
+  const jsonData = result.rows[0]?.result; 
+  
+  return jsonData; 
+};
+
+/**
+ * Lấy danh sách Feedback (Góp ý)
+ */
+export const getFeedbacks = async () => {
+  const result = await pool.query(
+    `SELECT api.fn_admin_get_feedbacks_json(50) AS result` // Lấy 50 cái mới nhất
+  );
+  // Trả về dữ liệu json từ SQL
+  return result.rows[0]?.result ?? null; 
 };

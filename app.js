@@ -35,7 +35,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/giftcodes', promoRoutes);
 app.use('/api/support', supportRoutes);
-
+app.use('/api/promo', promoRoutes);
 
 // 5. Khởi động Batch Jobs
 startBatchJobs();

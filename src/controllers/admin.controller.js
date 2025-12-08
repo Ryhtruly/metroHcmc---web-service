@@ -391,37 +391,22 @@ export const getTicketProducts = async (req, res) => {
  * PUT /api/admin/giftcodes/:promo_id (Cập nhật)
  */
 // ĐÃ ĐỔI TÊN HÀM TỪ createGiftcodeBatch sang upsertGiftcode
-export const upsertGiftcode = async (req, res) => { 
+export const upsertGiftcode = async (req, res) => {
   try {
-    // const actor_user_id = req.user.user_id; // Giả định lấy ID người dùng từ token
-    
-    // LẤY ID TỪ URL (Chỉ có khi là PUT)
-    const promo_id_from_url = req.params.promo_id || null; 
-
-    // LẤY CÁC THAM SỐ CẦN THIẾT
-    // LƯU Ý: Frontend gửi 'code' (Prefix) và 'ticket_product_code'
-    const {
-      prefix,                    
-      quantity,                  
-      ticket_product_code,       
-      max_usage,                 
-      starts_at,                 
-      is_active,                 
+    const { 
+      promo_id, p_prefix, p_quantity, p_ticket_product_code, 
+      p_max_usage, p_starts_at, p_expires_at, p_is_active // <--- Thêm p_expires_at
     } = req.body;
 
-    // QUYẾT ĐỊNH ID CUỐI CÙNG (Ưu tiên ID từ URL khi sửa)
-    // Khi POST, final_promo_id LUÔN LÀ NULL
-    const final_promo_id = promo_id_from_url || null; 
-
-    // Gọi service với các tham số đã cập nhật
     const result = await adminService.upsertGiftcode(
-      final_promo_id,
-      prefix,
-      quantity,
-      ticket_product_code,
-      max_usage,
-      starts_at,
-      is_active
+      promo_id, 
+      p_prefix, 
+      p_quantity, 
+      p_ticket_product_code, 
+      p_max_usage, 
+      p_starts_at, 
+      p_expires_at, // <--- Truyền xuống Service
+      p_is_active
     );
     
     let message = "Thao tác thành công.";
@@ -478,3 +463,19 @@ export const deleteStation = async (req, res) => {
   }
 };
 
+// Lấy danh sách Feedback
+export const getFeedbacks = async (req, res) => {
+  try {
+    // 👇 SỬA Ở ĐÂY: Gọi qua adminService thay vì dùng pool.query
+    const result = await adminService.getFeedbacks();
+    
+    // Kiểm tra kết quả trả về
+    if (result && result.success) {
+        return res.json(result.data); // Trả về mảng data
+    }
+    return res.json([]); // Nếu không có dữ liệu trả về mảng rỗng
+  } catch (err) {
+    console.error("Lỗi getFeedbacks:", err);
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
