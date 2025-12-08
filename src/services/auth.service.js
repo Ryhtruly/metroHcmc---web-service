@@ -49,9 +49,10 @@ const register = async (email, password, display_name, phone_number, address, cc
 
 // 2. Đăng nhập
 const login = async (email, password) => {
-  const query = 'SELECT * FROM fn_auth_login_json($1, $2, $3, $4)';
+  const query = 'SELECT * FROM api.fn_auth_login_json($1, $2, $3, $4)';
   const { rows } = await pool.query(query, ['LOCAL', email, password, null]);
-  return rows[0].fn_auth_login_json;
+
+  return rows[0].fn_auth_login_json; 
 };
 
 // 3. Lấy thông báo công khai

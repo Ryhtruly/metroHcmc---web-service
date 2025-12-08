@@ -15,7 +15,7 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
 
       // 2. Gọi hàm DB để kiểm tra tính hợp lệ của token
-      const query = 'SELECT * FROM fn_auth_get_me_json($1)';
+      const query = 'SELECT * FROM api.fn_auth_get_me_json($1)';
       const { rows } = await pool.query(query, [token]);
 
       const dbResponse = rows[0].fn_auth_get_me_json;

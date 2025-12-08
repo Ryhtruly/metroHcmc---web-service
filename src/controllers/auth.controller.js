@@ -60,6 +60,9 @@ const loginUser = async (req, res) => {
       res.status(401).json(dbResponse);
     }
   } catch (err) {
+    // 👇 THÊM DÒNG NÀY ĐỂ TERMINAL HIỆN LỖI ĐỎ 👇
+    console.error("🔥 LỖI ĐĂNG NHẬP:", err); 
+    
     res.status(500).json({ success: false, message: err.message });
   }
 };
