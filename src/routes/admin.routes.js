@@ -35,8 +35,8 @@ router.get("/fare-rules", protect, adminOnly, adminController.getFareRules);
 router.get("/ticket-products", protect, adminOnly, adminController.getTicketProducts);
 
 // API Ga
-router.get("/stations", protect, adminOnly, adminController.getAllStations); 
-router.delete("/stations/:code", protect, adminOnly, adminController.deleteStation); 
+router.get("/stations", protect, adminOnly, adminController.getAllStations);
+router.delete("/stations/:code", protect, adminOnly, adminController.deleteStation);
 
 // api giftcodes
 router.post("/giftcodes", protect, adminOnly, adminController.upsertGiftcode); 

@@ -15,7 +15,7 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
 
       // 2. Gọi hàm DB để kiểm tra tính hợp lệ của token
-      const query = 'SELECT * FROM api.fn_auth_get_me_json($1)';
+      const query = 'SELECT * FROM fn_auth_get_me_json($1)';
       const { rows } = await pool.query(query, [token]);
 
       const dbResponse = rows[0].fn_auth_get_me_json;
@@ -28,10 +28,10 @@ export const protect = async (req, res, next) => {
         // Nếu token còn sống, tự động cộng thêm 10 phút kể từ bây giờ
         // Giúp người dùng đang thao tác không bị logout giữa chừng
         await pool.query(
-            `UPDATE auth_tokens 
+          `UPDATE auth_tokens 
              SET expires_at = NOW() + INTERVAL '10 minutes' 
              WHERE token = $1`,
-            [token]
+          [token]
         );
         // -------------------------------------------------------------
 
@@ -57,11 +57,11 @@ export const protect = async (req, res, next) => {
 export const adminOnly = (req, res, next) => {
   // req.user đã được hàm 'protect' gắn vào trước đó
   if (req.user && req.user.role === 'ADMIN') {
-    next(); 
+    next();
   } else {
-    res.status(403).json({ 
-      success: false, 
-      message: 'Forbidden: Yêu cầu quyền Admin' 
+    res.status(403).json({
+      success: false,
+      message: 'Forbidden: Yêu cầu quyền Admin'
     });
   }
 };
@@ -69,11 +69,11 @@ export const adminOnly = (req, res, next) => {
 // Chỉ cho phép INSPECTOR (Nhân viên soát vé)
 export const inspectorOnly = (req, res, next) => {
   if (req.user && req.user.role === 'INSPECTOR') {
-    next(); 
+    next();
   } else {
-    res.status(403).json({ 
-      success: false, 
-      message: 'Forbidden: Yêu cầu quyền Inspector' 
+    res.status(403).json({
+      success: false,
+      message: 'Forbidden: Yêu cầu quyền Inspector'
     });
   }
 };
@@ -81,11 +81,11 @@ export const inspectorOnly = (req, res, next) => {
 // Chỉ cho phép CUSTOMER (Khách hàng)
 export const customerOnly = (req, res, next) => {
   if (req.user && req.user.role === 'CUSTOMER') {
-    next(); 
+    next();
   } else {
-    res.status(403).json({ 
-      success: false, 
-      message: 'Forbidden: Yêu cầu quyền Customer' 
+    res.status(403).json({
+      success: false,
+      message: 'Forbidden: Yêu cầu quyền Customer'
     });
   }
 };
