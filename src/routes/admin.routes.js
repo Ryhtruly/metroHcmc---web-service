@@ -1,6 +1,8 @@
 import express from "express";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 import * as adminController from "../controllers/admin.controller.js";
+import * as promoController from "../controllers/promo.controller.js"; 
+
 
 const router = express.Router();
 
@@ -33,7 +35,16 @@ router.get("/fare-rules", protect, adminOnly, adminController.getFareRules);
 router.get("/ticket-products", protect, adminOnly, adminController.getTicketProducts);
 
 // API Ga
-router.get("/stations", protect, adminOnly, adminController.getAllStations); 
-router.delete("/stations/:code", protect, adminOnly, adminController.deleteStation); 
+router.get("/stations", protect, adminOnly, adminController.getAllStations);
+router.delete("/stations/:code", protect, adminOnly, adminController.deleteStation);
+
+// api giftcodes
+router.post("/giftcodes", protect, adminOnly, adminController.upsertGiftcode); 
+router.get("/giftcodes", protect, adminOnly, adminController.getGiftcodes);
+
+// Cập nhật giftcode
+router.put("/giftcodes/:promo_id", protect, adminOnly, adminController.upsertGiftcode);
+router.get("/feedbacks", protect, adminOnly, adminController.getFeedbacks);
+
 
 export default router;

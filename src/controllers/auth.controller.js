@@ -2,30 +2,67 @@ import { authService } from '../services/auth.service.js';
 
 const registerUser = async (req, res) => {
   try {
-    const { email, password, displayName } = req.body;
-    const dbResponse = await authService.register(email, password, displayName);
-    
+    const {
+      email,
+      password,
+      display_name,
+      phone_number,
+      address,
+      cccd,
+      birth_date
+    } = req.body;
+
+    // Log để debug
+    console.log('Register request data:', req.body);
+
+    // Validate bắt buộc
+    if (!email || !password || !display_name) {
+      return res.status(400).json({
+        success: false,
+        error_code: 'MISSING_REQUIRED_FIELDS',
+        message: 'Email, mật khẩu và họ tên là bắt buộc'
+      });
+    }
+
+    const dbResponse = await authService.register(
+      email,
+      password,
+      display_name,
+      phone_number,
+      address,
+      cccd,
+      birth_date
+    );
+
     if (dbResponse.success) {
-      res.status(201).json(dbResponse); 
+      // Set cookie hoặc header nếu cần
+      res.status(201).json(dbResponse);
     } else {
-      res.status(400).json(dbResponse); 
+      res.status(400).json(dbResponse);
     }
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('Controller registration error:', err);
+    res.status(500).json({
+      success: false,
+      error_code: 'SERVER_ERROR',
+      message: 'Lỗi server khi đăng ký'
+    });
   }
 };
-
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     const dbResponse = await authService.login(email, password);
 
     if (dbResponse.success) {
-      res.status(200).json(dbResponse); 
+      res.status(200).json(dbResponse);
     } else {
-      res.status(401).json(dbResponse); 
+      res.status(401).json(dbResponse);
     }
   } catch (err) {
+    // 👇 THÊM DÒNG NÀY ĐỂ TERMINAL HIỆN LỖI ĐỎ 👇
+    console.error("🔥 LỖI ĐĂNG NHẬP:", err); 
+    
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -43,6 +80,43 @@ const getPublicAnnouncements = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+// Controller updateMe
+const updateMe = async (req, res) => {
+  try {
+    const userId = req.user.user_id; // đã có từ middleware protect
+    const { display_name, phone_number, address, cccd, birth_date } = req.body;
+
+    // Kiểm tra xem tên hiển thị có hợp lệ không
+    if (display_name && !display_name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tên hiển thị không được để trống',
+      });
+    }
+
+    // Gọi service để cập nhật thông tin người dùng
+    const dbResponse = await authService.updateUserProfile(
+      userId,
+      display_name?.trim(),
+      phone_number?.trim(),
+      address?.trim(),
+      cccd?.trim(),
+      birth_date
+    );
+
+    if (!dbResponse.success) {
+      return res.status(400).json(dbResponse);
+    }
+
+    return res.status(200).json(dbResponse); // { success: true, user: {...} }
+  } catch (err) {
+    console.error('updateMe error:', err);
+    return res
+      .status(500)
+      .json({ success: false, message: 'Internal server error' });
+  }
+};
+
 
 // --- 👇 Chức năng Quên mật khẩu & Reset mật khẩu 👇 ---
 
@@ -50,10 +124,9 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const dbResponse = await authService.forgotPassword(email);
-    
+
     if (dbResponse.success) {
-      // Trong thực tế: Gửi email chứa link reset tại đây.
-      // Demo: Trả về token luôn để Frontend tự chuyển trang.
+      // Demo: trả về thẳng mật khẩu tạm & token
       res.status(200).json(dbResponse);
     } else {
       res.status(400).json(dbResponse);
@@ -63,11 +136,14 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+
+
 const resetPassword = async (req, res) => {
   try {
-    const { token, new_password } = req.body;
-    const dbResponse = await authService.resetPassword(token, new_password);
-    
+    const { token, old_password, new_password } = req.body; // thêm old_password
+
+    const dbResponse = await authService.resetPassword(token, old_password, new_password);
+
     if (dbResponse.success) {
       res.status(200).json(dbResponse);
     } else {
@@ -77,6 +153,7 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 export const authController = {
   registerUser,
@@ -85,4 +162,5 @@ export const authController = {
   getPublicAnnouncements,
   forgotPassword, // Mới
   resetPassword,  // Mới
+  updateMe,
 };

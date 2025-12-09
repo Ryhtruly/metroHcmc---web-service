@@ -293,6 +293,9 @@ export const getPayments = async (req, res) => {
   }
 };
 
+/**
+ * 12)
+ */
 export const getDashboardStats = async (req, res) => {
   try {
     const data = await adminService.getDashboardStats();
@@ -314,7 +317,8 @@ export const getDashboardStats = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-// ...
+
+// 13)
 export const reportTicketTypes = async (req, res) => {
   try {
     const { from_date, to_date } = req.query;
@@ -329,7 +333,7 @@ export const reportTicketTypes = async (req, res) => {
 // ... (Các hàm khác giữ nguyên)
 
 /**
- * 13) Lấy danh sách khuyến mãi
+ * 14) Lấy danh sách khuyến mãi
  */
 export const getPromotions = async (req, res) => {
   try {
@@ -342,6 +346,9 @@ export const getPromotions = async (req, res) => {
   }
 };
 
+/**
+ * 15)
+ */
 export const getAnnouncements = async (req, res) => {
   try {
     // Service đã trả về { ok: true, data: [...] } từ DB
@@ -353,6 +360,9 @@ export const getAnnouncements = async (req, res) => {
   }
 };
 
+/**
+ * 16)
+ */
 export const getFareRules = async (req, res) => {
   try {
     // Service đã trả về object { ok: true, data: [...] }
@@ -363,11 +373,72 @@ export const getFareRules = async (req, res) => {
   }
 };
 
+/**
+ * 17)
+ */
 export const getTicketProducts = async (req, res) => {
   try {
     const result = await adminService.getTicketProducts();
     return res.json(result);
   } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+/**
+ * 18) Tạo/Cập nhật Giftcode (Admin)
+ * POST /api/admin/giftcodes/batch (Tạo mới)
+ * PUT /api/admin/giftcodes/:promo_id (Cập nhật)
+ */
+// ĐÃ ĐỔI TÊN HÀM TỪ createGiftcodeBatch sang upsertGiftcode
+export const upsertGiftcode = async (req, res) => {
+  try {
+    const { 
+      promo_id, p_prefix, p_quantity, p_ticket_product_code, 
+      p_max_usage, p_starts_at, p_expires_at, p_is_active // <--- Thêm p_expires_at
+    } = req.body;
+
+    const result = await adminService.upsertGiftcode(
+      promo_id, 
+      p_prefix, 
+      p_quantity, 
+      p_ticket_product_code, 
+      p_max_usage, 
+      p_starts_at, 
+      p_expires_at, // <--- Truyền xuống Service
+      p_is_active
+    );
+    
+    let message = "Thao tác thành công.";
+
+    if (result.count) {
+        message = `Đã tạo thành công ${result.count} mã giftcode.`;
+    } else if (result.promo_id) {
+        message = "Cập nhật mã giftcode thành công.";
+    }
+
+    return res.json({
+      ok: true,
+      message: message,
+      data: result
+    });
+
+  } catch (err) {
+    console.error("upsertGiftcode error:", err);
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+/**
+ * 19) Lấy danh sách Giftcode
+ * GET /api/admin/giftcodes
+ */
+export const getGiftcodes = async (req, res) => {
+  try {
+    const result = await adminService.getGiftcodes();
+    return res.json(result);
+  } catch (err) {
+    console.error("getGiftcodes error:", err);
     return res.status(500).json({ ok: false, message: err.message });
   }
 };
@@ -388,6 +459,23 @@ export const deleteStation = async (req, res) => {
     const result = await adminService.deleteStation(actor_user_id, code);
     return res.json(result);
   } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+// Lấy danh sách Feedback
+export const getFeedbacks = async (req, res) => {
+  try {
+    // 👇 SỬA Ở ĐÂY: Gọi qua adminService thay vì dùng pool.query
+    const result = await adminService.getFeedbacks();
+    
+    // Kiểm tra kết quả trả về
+    if (result && result.success) {
+        return res.json(result.data); // Trả về mảng data
+    }
+    return res.json([]); // Nếu không có dữ liệu trả về mảng rỗng
+  } catch (err) {
+    console.error("Lỗi getFeedbacks:", err);
     return res.status(500).json({ ok: false, message: err.message });
   }
 };
