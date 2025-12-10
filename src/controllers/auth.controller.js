@@ -52,18 +52,25 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
     const dbResponse = await authService.login(email, password);
 
     if (dbResponse.success) {
-      res.status(200).json(dbResponse);
+      res.status(200).json(dbResponse); // Đăng nhập thành công
     } else {
-      res.status(401).json(dbResponse);
+      // Sai mật khẩu/Tài khoản khóa -> Trả về 200 để Frontend hiện lỗi (Thay vì 401)
+      res.status(401).json({
+        success: false,
+        message: dbResponse.message || 'Tài khoản hoặc mật khẩu không đúng'
+      });
     }
   } catch (err) {
-    // 👇 THÊM DÒNG NÀY ĐỂ TERMINAL HIỆN LỖI ĐỎ 👇
-    console.error("🔥 LỖI ĐĂNG NHẬP:", err); 
-    
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Lỗi đăng nhập:", err);
+    // Lỗi hệ thống -> Vẫn trả 200 để không bị reload trang
+    res.status(500).json({ 
+      success: false, 
+      message: 'Lỗi kết nối Server' 
+    });
   }
 };
 
@@ -118,31 +125,41 @@ const updateMe = async (req, res) => {
 };
 
 
-// --- 👇 Chức năng Quên mật khẩu & Reset mật khẩu 👇 ---
-
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    // Gọi service (Service này gọi hàm api.fn_auth_forgot_password_json trong DB)
     const dbResponse = await authService.forgotPassword(email);
 
     if (dbResponse.success) {
-      // Demo: trả về thẳng mật khẩu tạm & token
-      res.status(200).json(dbResponse);
+      // 🔥 LOG TOKEN RA TERMINAL 🔥
+      console.log("\n=================================================");
+      console.log("🔥 [DEBUG] RESET TOKEN CHO:", email);
+      console.log("🔑 TOKEN:", dbResponse.reset_token);
+      console.log("=================================================\n");
+
+      res.status(200).json({ 
+        success: true, 
+        message: 'Yêu cầu thành công! Kiểm tra Terminal Server để lấy Token.' 
+      });
     } else {
-      res.status(400).json(dbResponse);
+      res.status(401).json(dbResponse);
     }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-
-
 const resetPassword = async (req, res) => {
   try {
-    const { token, old_password, new_password } = req.body; // thêm old_password
+    const { token, new_password } = req.body;
 
-    const dbResponse = await authService.resetPassword(token, old_password, new_password);
+    if (!token || !new_password) {
+      return res.status(400).json({ success: false, message: "Thiếu Token hoặc Mật khẩu mới" });
+    }
+
+    // Gọi service (Service này gọi hàm api.fn_auth_reset_password_via_token_json)
+    const dbResponse = await authService.resetPassword(token, new_password);
 
     if (dbResponse.success) {
       res.status(200).json(dbResponse);
@@ -153,7 +170,6 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
 
 export const authController = {
   registerUser,

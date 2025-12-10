@@ -16,6 +16,8 @@ import ticketRoutes from './src/routes/ticket.routes.js';
 import promoRoutes from './src/routes/promo.routes.js';
 import supportRoutes from './src/routes/support.routes.js';
 import { startBatchJobs } from './src/services/batch.service.js';
+import { loadModels } from './src/config/faceAI.js';
+import faceRoutes from './src/routes/face.routes.js';
 
 const app = express();
 
@@ -36,6 +38,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/giftcodes', promoRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/promo', promoRoutes);
+app.use('/api/auth', faceRoutes);
 
 // 5. Khởi động Batch Jobs
 startBatchJobs();
@@ -60,4 +63,4 @@ app.use((err, req, res, next) => {
   });
 });
 
-export default app;
+export default app; 
