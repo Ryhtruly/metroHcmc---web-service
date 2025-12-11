@@ -39,15 +39,15 @@ const ticketService = {
     return unwrap(result, 'fn_quote_single_json');
   },
 
-  createSingleTicket: async (userId, lineCode, fromStation, toStation, stops, finalPrice, promoCode) => {
-    const query = "SELECT * FROM api.fn_create_ticket_single_json($1, $2, $3, $4, $5, $6, $7)";
-    const result = await pool.query(query, [userId, lineCode, fromStation, toStation, stops, finalPrice, promoCode]);
+  createSingleTicket: async (user_id, line_code, from_station, to_station, stops, final_price, promo_code) => {
+    const query = 'SELECT * FROM api.fn_create_ticket_single_json($1, $2, $3, $4, $5, $6, $7)';
+    const result = await pool.query(query, [user_id, line_code, from_station, to_station, stops, final_price, promo_code]);
     return unwrap(result, 'fn_create_ticket_single_json');
   },
 
-  createPassTicket: async (userId, productCode, promoCode) => {
-    const query = "SELECT * FROM api.fn_create_ticket_pass_json($1, $2, $3)";
-    const result = await pool.query(query, [userId, productCode, promoCode]);
+  createPassTicket: async (user_id, product_code, final_price, promo_code) => {
+    const query = 'SELECT * FROM api.fn_create_ticket_pass_json($1, $2, $3, $4)';
+    const result = await pool.query(query, [user_id, product_code, final_price, promo_code]);
     return unwrap(result, 'fn_create_ticket_pass_json');
   },
 

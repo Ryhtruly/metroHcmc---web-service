@@ -51,11 +51,11 @@ const ticketController = {
 
   createSingle: async (req, res) => {
     try {
-      const userId = req.user.user_id; 
+      const user_id = req.user.user_id;
       const { line_code, from_station, to_station, stops, final_price, promo_code } = req.body;
       
       const data = await ticketService.createSingleTicket(
-        userId, line_code, from_station, to_station, stops, final_price, promo_code
+        user_id, line_code, from_station, to_station, stops, final_price, promo_code
       );
       res.json(data);
     } catch (err) {
@@ -65,10 +65,14 @@ const ticketController = {
 
   createPass: async (req, res) => {
     try {
-      const userId = req.user.user_id;
-      const { product_code, promo_code } = req.body;
+      const user_id = req.user.user_id;
+      const { product_code, final_price, promo_code } = req.body;
       
-      const data = await ticketService.createPassTicket(userId, product_code, promo_code);
+      if (!product_code || final_price === undefined) {
+        return res.status(400).json({ ok: false, message: 'Thiếu thông tin vé hoặc giá tiền.' });
+      }
+
+      const data = await ticketService.createPassTicket(user_id, product_code, final_price, promo_code);
       res.json(data);
     } catch (err) {
       res.status(500).json({ success: false, message: err.message });

@@ -19,3 +19,13 @@ export async function redeemGiftcodeService(userId, code) {
   // Giả định hàm unwrap giúp lấy result.rows[0].result
   return result.rows[0]?.result; 
 }
+
+const checkPromotion = async (code, original_price, user_id) => {
+  const query = 'SELECT api.fn_check_promotion_json($1, $2, $3) as result';
+  const { rows } = await pool.query(query, [code, original_price, user_id]);
+  return rows[0].result;
+};
+
+export const promoService = {
+  checkPromotion
+};
