@@ -2,14 +2,18 @@ import { scannerService } from '../services/scanner.service.js';
 
 const scanTicket = async (req, res) => {
   try {
-    const { qr_code, station_code } = req.body;
+    const { qr_code, station_code, direction } = req.body;
     const actor_user_id = req.user.user_id; 
 
-    if (!qr_code || !station_code) {
-      return res.status(400).json({ success: false, message: 'Thiếu qr_code hoặc station_code' });
+    if (!qr_code || !station_code || !direction) {
+      return res.status(400).json({ success: false, message: 'Thiếu qr_code hoặc station_code hoặc direction' });
     }
 
-    const dbResponse = await scannerService.scanTicket(qr_code, station_code, actor_user_id);
+    if (!['IN', 'OUT'].includes(direction)) {
+      return res.status(400).json({ success: false, message: 'Direction phải là IN hoặc OUT' });
+    }
+
+    const dbResponse = await scannerService.scanTicket(qr_code, station_code, direction, actor_user_id);
 
     if (dbResponse.success) {
       res.status(200).json(dbResponse); 
