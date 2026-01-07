@@ -47,12 +47,21 @@ const register = async (email, password, display_name, phone_number, address, cc
   }
 };
 
-// 2. Đăng nhập
+// File: src/services/auth.service.js
+// File: src/services/auth.service.js
 const login = async (email, password) => {
-  const query = 'SELECT * FROM api.fn_auth_login_json($1, $2, $3, $4)';
-  const { rows } = await pool.query(query, ['LOCAL', email, password, null]);
+  try {
+    // 1. Gọi đúng hàm Stored Procedure trong Schema 'api'
+    // Tham số: provider, email, password, user_agent
+    const query = 'SELECT api.fn_auth_login_json($1, $2, $3, $4) as result';
+    const { rows } = await pool.query(query, ['LOCAL', email, password, null]);
 
-  return rows[0].fn_auth_login_json; 
+    // 2. Trả về kết quả JSON mà hàm SQL trả ra
+    return rows[0].result; 
+  } catch (err) {
+    console.error('Lỗi Login Service:', err.message);
+    return { success: false, message: 'Lỗi kết nối cơ sở dữ liệu' };
+  }
 };
 
 // 3. Lấy thông báo công khai
@@ -110,11 +119,48 @@ const updateUserProfile = async (userId, display_name, phone_number, address, cc
   }
 };
 
+const enableBiometric = async (userId, biometricToken) => {
+  const query = `
+    UPDATE users 
+    SET biometric_token = $1, is_biometric_enabled = true 
+    WHERE user_id = $2 
+    RETURNING user_id`;
+  const { rows } = await pool.query(query, [biometricToken, userId]);
+  return rows.length > 0;
+};
+
+// src/services/auth.service.js
+export const loginWithBiometric = async (biometricToken) => {
+  // Tên hàm SQL của bạn: api.fn_auth_login_biometric_json
+  // Ta dùng alias 'AS result' để dễ lấy dữ liệu
+  const query = `SELECT api.fn_auth_login_biometric_json($1) AS result`;
+  const { rows } = await pool.query(query, [biometricToken]);
+  
+  // rows[0].result chính là cái JSON { success, token, user } mà SQL trả về
+  return rows[0].result; 
+};
+
+const getNotifications = async (userId) => {
+  try {
+    const result = await pool.query(
+      "SELECT api.fn_get_user_notifications_json($1) as data",
+      [userId]
+    );
+    return result.rows[0].data || [];
+  } catch (error) {
+    console.error('Error in getNotifications service:', error);
+    return [];
+  }
+};
+
 export const authService = {
   register,
   login,
-  getAnnouncements,
-  updateUserProfile,
   forgotPassword,
   resetPassword,
+  updateUserProfile,
+  enableBiometric,   
+  loginWithBiometric,
+  getAnnouncements,
+  getNotifications
 };

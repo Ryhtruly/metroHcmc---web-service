@@ -66,7 +66,6 @@ const loginUser = async (req, res) => {
     }
   } catch (err) {
     console.error("Lỗi đăng nhập:", err);
-    // Lỗi hệ thống -> Vẫn trả 200 để không bị reload trang
     res.status(500).json({ 
       success: false, 
       message: 'Lỗi kết nối Server' 
@@ -81,7 +80,8 @@ const getMe = async (req, res) => {
 
 const getPublicAnnouncements = async (req, res) => {
   try {
-    const dbResponse = await authService.getAnnouncements();
+    const dbResponse = await authService.getAnnouncements(); // Gọi service
+    // 🔥 SỬA: Trả về trực tiếp dbResponse vì SQL đã trả về { success, announcements } rồi
     res.status(200).json(dbResponse);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -171,12 +171,73 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const enableBiometric = async (req, res) => {
+  try {
+    const { biometricToken } = req.body;
+    const userId = req.user.user_id; // Lấy từ middleware protect
+
+    if (!biometricToken) {
+      return res.status(400).json({ success: false, message: 'Thiếu Biometric Token' });
+    }
+
+    const success = await authService.enableBiometric(userId, biometricToken);
+
+    if (success) {
+      res.json({ success: true, message: 'Kích hoạt sinh trắc học thành công' });
+    } else {
+      res.status(400).json({ success: false, message: 'Không thể kích hoạt' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 2. Hàm Đăng nhập (SỬA LỖI ReferenceError ở đây)
+const loginBiometric = async (req, res) => {
+  try {
+    const { biometricToken } = req.body;
+    
+    if (!biometricToken) {
+      return res.status(400).json({ success: false, message: 'Thiếu Token thiết bị' });
+    }
+
+    // Gọi service để chạy hàm SQL: api.fn_auth_login_biometric_json
+    const dbResponse = await authService.loginWithBiometric(biometricToken);
+
+    if (dbResponse.success) {
+      res.status(200).json(dbResponse);
+    } else {
+      res.status(401).json(dbResponse);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const getUserNotifications = async (req, res) => {
+  try {
+    // req.user.user_id có được nhờ middleware protect
+    const userId = req.user.user_id;
+    const data = await authService.getNotifications(userId);
+    
+    res.json({ 
+      success: true, 
+      notifications: data // Trả về mảng đã trộn cho Mobile
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const authController = {
   registerUser,
   loginUser,
   getMe,
-  getPublicAnnouncements,
-  forgotPassword, // Mới
-  resetPassword,  // Mới
   updateMe,
+  forgotPassword,
+  resetPassword,
+  getPublicAnnouncements,
+  enableBiometric, 
+  loginBiometric,
+  getUserNotifications  
 };

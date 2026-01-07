@@ -98,7 +98,20 @@ const ticketController = {
     } catch (err) {
       res.status(500).json({ success: false, message: err.message });
     }
-  }
+  },
+
+  addTicketProduct: async (req, res) => {
+    try {
+      const data = await ticketService.addTicketProduct(req.body);
+      if (data.success) {
+        res.status(201).json(data);
+      } else {
+        res.status(400).json(data);
+      }
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  },
 };
 
 export default ticketController;

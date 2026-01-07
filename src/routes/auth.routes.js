@@ -18,5 +18,8 @@ router.post('/reset-password', authController.resetPassword);
 // New: Forgot and reset password
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
+router.post('/enable-biometric', protect, authController.enableBiometric);
+router.post('/login-biometric', authController.loginBiometric);
+router.get('/notifications', protect, authController.getUserNotifications);
 
 export default router;

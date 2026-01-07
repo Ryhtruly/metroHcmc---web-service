@@ -22,5 +22,6 @@ router.post('/single', protect, ticketController.createSingle);
 router.post('/pass', protect, ticketController.createPass);
 router.get('/my-tickets', protect, ticketController.getMyTickets);
 router.get('/:id', protect, ticketController.getTicketDetail);
+router.post('/admin/products', protect, ticketController.addTicketProduct);
 
 export default router;

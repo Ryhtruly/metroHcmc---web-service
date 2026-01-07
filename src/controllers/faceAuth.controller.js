@@ -4,21 +4,16 @@ import { pool } from '../config/db.js';
 
 const { Canvas, Image } = canvas;
 
-// Hàm load ảnh cho thư viện gốc
 const bufferToImage = async (buffer) => {
   const img = new Image();
   img.src = buffer;
   return img;
 };
 
-// Hàm cộng gộp 2 mảng số (Hỗ trợ tính trung bình)
 const sumDescriptors = (desc1, desc2) => {
   return desc1.map((val, i) => val + desc2[i]);
 };
 
-// ==========================================
-// 1. ĐĂNG KÝ (NÂNG CẤP: Xử lý 3 ảnh)
-// ==========================================
 export const registerFace = async (req, res) => {
   try {
     const { user_id } = req.body;

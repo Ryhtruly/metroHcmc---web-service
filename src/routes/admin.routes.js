@@ -2,7 +2,7 @@ import express from "express";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 import * as adminController from "../controllers/admin.controller.js";
 import * as promoController from "../controllers/promo.controller.js"; 
-
+import customerController from '../controllers/customer.controller.js'; 
 
 const router = express.Router();
 
@@ -38,6 +38,8 @@ router.get("/ticket-products", protect, adminOnly, adminController.getTicketProd
 router.get("/stations", protect, adminOnly, adminController.getAllStations);
 router.delete("/stations/:code", protect, adminOnly, adminController.deleteStation);
 
+router.get('/customers', protect, customerController.getCustomers);
+
 // api giftcodes
 router.post("/giftcodes", protect, adminOnly, adminController.upsertGiftcode); 
 router.get("/giftcodes", protect, adminOnly, adminController.getGiftcodes);
@@ -46,5 +48,9 @@ router.get("/giftcodes", protect, adminOnly, adminController.getGiftcodes);
 router.put("/giftcodes/:promo_id", protect, adminOnly, adminController.upsertGiftcode);
 router.get("/feedbacks", protect, adminOnly, adminController.getFeedbacks);
 
+router.patch('/customers/:id/status', protect, customerController.updateStatus);
+router.get('/customers/:id/history', protect, customerController.getHistory);
+router.get('/giftcodes/available', protect, customerController.getAvailableCodes);
+router.post('/customers/send-gift', protect, adminOnly, customerController.sendGift);
 
 export default router;

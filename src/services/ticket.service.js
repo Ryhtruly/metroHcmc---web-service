@@ -61,7 +61,19 @@ const ticketService = {
     const query = "SELECT * FROM api.fn_get_ticket_json($1)";
     const result = await pool.query(query, [ticketId]);
     return unwrap(result, 'fn_get_ticket_json');
-  }
+  }, 
+  addTicketProduct: async (productData) => {
+    const { code, name_vi, type, price, duration_hours, auto_activate_after_days } = productData;
+    
+    // 🔥 Đặt tên cột trả về là AS result để dễ lấy
+    const query = 'SELECT api.fn_admin_add_ticket_product_json($1, $2, $3, $4, $5, $6) AS result';
+    const result = await pool.query(query, [
+      code, name_vi, type, price, duration_hours, auto_activate_after_days
+    ]);
+    
+    // Trả về trực tiếp Object {success, message}
+    return result.rows[0].result; 
+  },
 };
 
 export default ticketService;
