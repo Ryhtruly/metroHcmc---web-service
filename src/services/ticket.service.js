@@ -1,89 +1,122 @@
-import { pool } from '../config/db.js';
+import { pool } from "../config/db.js";
 
 const unwrap = (queryResult, colName) => {
-    if (queryResult.rows.length > 0) {
-        return queryResult.rows[0][colName];
-    }
-    return null;
+  if (queryResult.rows.length > 0) {
+    return queryResult.rows[0][colName];
+  }
+  return null;
 };
 
 const ticketService = {
   getLines: async () => {
     const query = "SELECT * FROM api.fn_get_lines_json()";
     const result = await pool.query(query);
-    return unwrap(result, 'fn_get_lines_json');
+    return unwrap(result, "fn_get_lines_json");
   },
 
   getStations: async (lineCode) => {
     const query = "SELECT * FROM api.fn_get_stations_json($1)";
     const result = await pool.query(query, [lineCode]);
-    return unwrap(result, 'fn_get_stations_json');
+    return unwrap(result, "fn_get_stations_json");
   },
 
   getTicketProducts: async () => {
     const query = "SELECT * FROM api.fn_get_active_ticket_products_json()";
     const result = await pool.query(query);
-    return unwrap(result, 'fn_get_active_ticket_products_json');
+    return unwrap(result, "fn_get_active_ticket_products_json");
   },
 
   getTicketProducts: async () => {
     // Gọi hàm SQL vừa tạo ở Bước 1
     const query = "SELECT * FROM api.fn_get_active_ticket_products_json()";
     const result = await pool.query(query);
-    return unwrap(result, 'fn_get_active_ticket_products_json');
+    return unwrap(result, "fn_get_active_ticket_products_json");
   },
 
   quoteSingleTicket: async (lineCode, fromStation, toStation, promoCode) => {
     const query = "SELECT * FROM api.fn_quote_single_json($1, $2, $3, $4)";
-    const result = await pool.query(query, [lineCode, fromStation, toStation, promoCode]);
-    return unwrap(result, 'fn_quote_single_json');
+    const result = await pool.query(query, [
+      lineCode,
+      fromStation,
+      toStation,
+      promoCode,
+    ]);
+    return unwrap(result, "fn_quote_single_json");
   },
 
-  createSingleTicket: async (user_id, line_code, from_station, to_station, stops, final_price, promo_code) => {
-    const query = 'SELECT * FROM api.fn_create_ticket_single_json($1, $2, $3, $4, $5, $6, $7)';
-    const result = await pool.query(query, [user_id, line_code, from_station, to_station, stops, final_price, promo_code]);
-    return unwrap(result, 'fn_create_ticket_single_json');
+  createSingleTicket: async (
+    user_id,
+    line_code,
+    from_station,
+    to_station,
+    stops,
+    final_price,
+    promo_code
+  ) => {
+    const query =
+      "SELECT * FROM api.fn_create_ticket_single_json($1, $2, $3, $4, $5, $6, $7)";
+    const result = await pool.query(query, [
+      user_id,
+      line_code,
+      from_station,
+      to_station,
+      stops,
+      final_price,
+      promo_code,
+    ]);
+    return unwrap(result, "fn_create_ticket_single_json");
   },
 
   createPassTicket: async (user_id, product_code, final_price, promo_code) => {
-    const query = 'SELECT * FROM api.fn_create_ticket_pass_json($1, $2, $3, $4)';
-    const result = await pool.query(query, [user_id, product_code, final_price, promo_code]);
-    return unwrap(result, 'fn_create_ticket_pass_json');
+    const query =
+      "SELECT * FROM api.fn_create_ticket_pass_json($1, $2, $3, $4)";
+    const result = await pool.query(query, [
+      user_id,
+      product_code,
+      final_price,
+      promo_code,
+    ]);
+    return unwrap(result, "fn_create_ticket_pass_json");
   },
 
   getUserTickets: async (userId, statusFilter) => {
     const query = "SELECT * FROM api.fn_get_user_tickets_json($1, $2)";
     const result = await pool.query(query, [userId, statusFilter || null]);
-    return unwrap(result, 'fn_get_user_tickets_json');
+    return unwrap(result, "fn_get_user_tickets_json");
   },
 
   getTicketDetail: async (ticketId) => {
     const query = "SELECT * FROM api.fn_get_ticket_json($1)";
     const result = await pool.query(query, [ticketId]);
-    return unwrap(result, 'fn_get_ticket_json');
-  }, 
-// src/services/ticket.service.js
-addTicketProduct: async (productData) => {
-    const { 
-        actor_user_id, code, name_vi, type, 
-        price, duration_hours, auto_activate_after_days, state 
+    return unwrap(result, "fn_get_ticket_json");
+  },
+  addTicketProduct: async (productData) => {
+    const {
+      actor_user_id,
+      code,
+      name_vi,
+      type,
+      price,
+      duration_hours,
+      auto_activate_after_days,
+      state,
     } = productData;
-    
-    // 🔥 SỬA: Gọi hàm upsert để hỗ trợ cả Thêm mới và Cập nhật
-    const query = 'SELECT api.fn_admin_upsert_ticket_product_json($1, $2, $3, $4, $5, $6, $7, $8) as result';
+
+    const query =
+      "SELECT api.fn_admin_upsert_ticket_product_json($1, $2, $3, $4, $5, $6, $7, $8) as result";
     const result = await pool.query(query, [
-        actor_user_id,
-        code,
-        name_vi,
-        type,
-        price,
-        duration_hours,
-        auto_activate_after_days,
-        state ?? true // Mặc định là true nếu không truyền
+      actor_user_id,
+      code,
+      name_vi,
+      type,
+      price,
+      duration_hours,
+      auto_activate_after_days,
+      state ?? true,
     ]);
-    
+
     return result.rows[0].result;
-},
+  },
 };
 
 export default ticketService;
