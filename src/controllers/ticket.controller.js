@@ -137,6 +137,18 @@ const ticketController = {
       res.status(500).json({ success: false, message: err.message });
     }
   },
+
+// src/controllers/ticket.controller.js
+
+getCustomerTicketsForAdmin: async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const data = await ticketService.getUserTickets(userId, null);
+    res.json(data); 
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+},
 };
 
 export default ticketController;
