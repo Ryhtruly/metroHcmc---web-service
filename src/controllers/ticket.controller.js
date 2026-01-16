@@ -100,18 +100,19 @@ const ticketController = {
     }
   },
 
-  addTicketProduct: async (req, res) => {
+  // src/controllers/ticket.controller.js
+addTicketProduct: async (req, res) => {
     try {
-      const data = await ticketService.addTicketProduct(req.body);
-      if (data.success) {
-        res.status(201).json(data);
-      } else {
-        res.status(400).json(data);
-      }
+        const actor_user_id = req.user.user_id; // Lấy từ token đăng nhập
+        const data = await ticketService.addTicketProduct({ 
+            ...req.body, 
+            actor_user_id 
+        });
+        res.json(data);
     } catch (err) {
-      res.status(500).json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: err.message });
     }
-  },
+},
 };
 
 export default ticketController;

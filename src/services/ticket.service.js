@@ -62,18 +62,28 @@ const ticketService = {
     const result = await pool.query(query, [ticketId]);
     return unwrap(result, 'fn_get_ticket_json');
   }, 
-  addTicketProduct: async (productData) => {
-    const { code, name_vi, type, price, duration_hours, auto_activate_after_days } = productData;
+// src/services/ticket.service.js
+addTicketProduct: async (productData) => {
+    const { 
+        actor_user_id, code, name_vi, type, 
+        price, duration_hours, auto_activate_after_days, state 
+    } = productData;
     
-    // 🔥 Đặt tên cột trả về là AS result để dễ lấy
-    const query = 'SELECT api.fn_admin_add_ticket_product_json($1, $2, $3, $4, $5, $6) AS result';
+    // 🔥 SỬA: Gọi hàm upsert để hỗ trợ cả Thêm mới và Cập nhật
+    const query = 'SELECT api.fn_admin_upsert_ticket_product_json($1, $2, $3, $4, $5, $6, $7, $8) as result';
     const result = await pool.query(query, [
-      code, name_vi, type, price, duration_hours, auto_activate_after_days
+        actor_user_id,
+        code,
+        name_vi,
+        type,
+        price,
+        duration_hours,
+        auto_activate_after_days,
+        state ?? true // Mặc định là true nếu không truyền
     ]);
     
-    // Trả về trực tiếp Object {success, message}
-    return result.rows[0].result; 
-  },
+    return result.rows[0].result;
+},
 };
 
 export default ticketService;
