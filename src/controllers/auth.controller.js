@@ -149,17 +149,47 @@ const forgotPassword = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+const forgotPasswordMobile = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const dbResponse = await authService.forgotPasswordMobile(email);
 
+    if (dbResponse.success) {
+      // Demo: trả về thẳng mật khẩu tạm & token
+      res.status(200).json(dbResponse);
+    } else {
+      res.status(400).json(dbResponse);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// const resetPassword = async (req, res) => {
+//   try {
+//     const { token, new_password } = req.body;
+
+//     if (!token || !new_password) {
+//       return res.status(400).json({ success: false, message: "Thiếu Token hoặc Mật khẩu mới" });
+//     }
+
+//     // Gọi service (Service này gọi hàm api.fn_auth_reset_password_via_token_json)
+//     const dbResponse = await authService.resetPassword(token, new_password);
+
+//     if (dbResponse.success) {
+//       res.status(200).json(dbResponse);
+//     } else {
+//       res.status(400).json(dbResponse);
+//     }
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// };
 const resetPassword = async (req, res) => {
   try {
-    const { token, new_password } = req.body;
+    const { token, old_password, new_password } = req.body; // thêm old_password
 
-    if (!token || !new_password) {
-      return res.status(400).json({ success: false, message: "Thiếu Token hoặc Mật khẩu mới" });
-    }
-
-    // Gọi service (Service này gọi hàm api.fn_auth_reset_password_via_token_json)
-    const dbResponse = await authService.resetPassword(token, new_password);
+    const dbResponse = await authService.resetPassword(token, old_password, new_password);
 
     if (dbResponse.success) {
       res.status(200).json(dbResponse);
@@ -235,6 +265,7 @@ export const authController = {
   getMe,
   updateMe,
   forgotPassword,
+  forgotPasswordMobile,
   resetPassword,
   getPublicAnnouncements,
   enableBiometric, 

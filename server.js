@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3000;
 const startServer = async () => {
   try {
     // Thêm '0.0.0.0' làm tham số thứ 2
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(
         `🚀 Web Service (Máy 3) đang lắng nghe trên tất cả các IP tại port ${PORT}`
       );
