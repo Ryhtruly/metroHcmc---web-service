@@ -1,6 +1,6 @@
-import crypto from 'crypto';
-import { paymentService } from '../services/payment.service.js';
-import { payos } from '../config/payos.js';
+import crypto from "crypto";
+import { paymentService } from "../services/payment.service.js";
+import { payos } from "../config/payos.js";
 
 const handlePayOSCancel = async (req, res) => {
   try {
@@ -16,9 +16,8 @@ const handlePayOSCancel = async (req, res) => {
     if (redirect) {
       res.redirect(decodeURIComponent(redirect));
     } else {
-      res.redirect('metroapp://payment-cancel'); // Fallback
+      res.redirect("metroapp://payment-cancel"); // Fallback
     }
-    
   } catch (err) {
     console.error("Cancel Error:", err);
     res.status(500).send("Lỗi xử lý hủy thanh toán");
@@ -27,35 +26,46 @@ const handlePayOSCancel = async (req, res) => {
 
 const createPaymentRequest = async (req, res) => {
   try {
-    const { ticket_id, method = 'PAYOS', returnUrl, cancelUrl } = req.body; 
+    const { ticket_id, method = "PAYOS", returnUrl, cancelUrl } = req.body;
 
     // 1. Lấy thông tin vé & Validate
     const ticketResponse = await paymentService.getTicketDetails(ticket_id);
-    if (ticketResponse.error) return res.status(404).json({ success: false, message: ticketResponse.error });
-    
+    if (ticketResponse.error)
+      return res
+        .status(404)
+        .json({ success: false, message: ticketResponse.error });
+
     const ticketDetails = ticketResponse.data;
-    if (ticketDetails.status !== 'NEW') {
-      return res.status(400).json({ success: false, message: 'Vé không hợp lệ.' });
+    if (ticketDetails.status !== "NEW") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Vé không hợp lệ." });
     }
-    
+
     const amount = Number(ticketDetails.final_price);
 
     // 2. Tạo payment PENDING
-    const dbResponse = await paymentService.createPayment(ticket_id, method, amount);
+    const dbResponse = await paymentService.createPayment(
+      ticket_id,
+      method,
+      amount
+    );
     if (!dbResponse.success) return res.status(400).json(dbResponse);
 
-    const payment_id = dbResponse.payment.payment_id; 
-    const orderCode = parseInt(payment_id); 
+    const payment_id = dbResponse.payment.payment_id;
+    const orderCode = Number(String(Date.now()).slice(-6));
 
     // 3. Cấu hình URL cho PayOS
     // - Thành công: Về thẳng App Mobile (clientReturnUrl gửi từ App lên)
-    const backendHost = `${req.protocol}://${req.get('host')}`;
-    
+    const backendHost = `${req.protocol}://${req.get("host")}`;
+
     // Nếu Mobile không gửi (test postman) thì fallback về metroapp://
-    const mobileCancelLink = cancelUrl || 'metroapp://payment-cancel';
-    
+    const mobileCancelLink = cancelUrl || "metroapp://payment-cancel";
+
     // URL này: PayOS -> Backend (xử lý DB) -> Redirect về Mobile
-    const serverCancelUrl = `${backendHost}/api/payments/payos-cancel?orderCode=${orderCode}&redirect=${encodeURIComponent(mobileCancelLink)}`;
+    const serverCancelUrl = `${backendHost}/api/payments/payos-cancel?orderCode=${orderCode}&redirect=${encodeURIComponent(
+      mobileCancelLink
+    )}`;
 
     const payload = {
       orderCode,
@@ -76,12 +86,11 @@ const createPaymentRequest = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      provider: 'payos',
+      provider: "payos",
       orderCode,
       checkoutUrl: link.checkoutUrl,
       qrCode: link.qrCode,
     });
-
   } catch (err) {
     console.error("PayOS Create Error:", err);
     res.status(500).json({ success: false, message: err.message });
@@ -98,7 +107,7 @@ const confirmPaymentWebhook = async (req, res) => {
       return res.status(200).json({ ok: true }); // Ping từ PayOS
     }
 
-    // 1. Xác thực chữ ký (Signature) 
+    // 1. Xác thực chữ ký (Signature)
     let isValid = false;
     try {
       // Thử bằng SDK
@@ -108,29 +117,38 @@ const confirmPaymentWebhook = async (req, res) => {
     }
 
     if (!isValid) {
-      // Fallback: Thử xác thực thủ công 
+      // Fallback: Thử xác thực thủ công
       try {
         const data = body?.data ?? {};
         const signature = String(body?.signature || "");
-        
-        const ordered = Object.keys(data).sort().reduce((acc, k) => {
-          let v = (data)[k];
-          if (Array.isArray(v)) {
-            v = JSON.stringify(v.map((o) =>
-              Object.keys(o || {}).sort().reduce((oo, kk) => (oo[kk] = (o)[kk], oo), {})
-            ));
-          } else if (v == null || v === "null" || v === "undefined") {
-            v = "";
-          }
-          acc[k] = v;
-          return acc;
-        }, {});
+
+        const ordered = Object.keys(data)
+          .sort()
+          .reduce((acc, k) => {
+            let v = data[k];
+            if (Array.isArray(v)) {
+              v = JSON.stringify(
+                v.map((o) =>
+                  Object.keys(o || {})
+                    .sort()
+                    .reduce((oo, kk) => ((oo[kk] = o[kk]), oo), {})
+                )
+              );
+            } else if (v == null || v === "null" || v === "undefined") {
+              v = "";
+            }
+            acc[k] = v;
+            return acc;
+          }, {});
 
         const dataQueryStr = Object.keys(ordered)
           .map((k) => `${k}=${ordered[k]}`)
           .join("&");
 
-        const computed = crypto.createHmac("sha256", checksumKey).update(dataQueryStr).digest("hex");
+        const computed = crypto
+          .createHmac("sha256", checksumKey)
+          .update(dataQueryStr)
+          .digest("hex");
         isValid = computed === signature;
       } catch (manualError) {
         isValid = false;
@@ -138,7 +156,10 @@ const confirmPaymentWebhook = async (req, res) => {
     }
 
     if (!isValid) {
-      console.error('[PayOS Webhook] Invalid signature for order:', orderCodeStr);
+      console.error(
+        "[PayOS Webhook] Invalid signature for order:",
+        orderCodeStr
+      );
       return res.status(400).json({ ok: false, error: "Invalid signature" });
     }
 
@@ -157,75 +178,89 @@ const confirmPaymentWebhook = async (req, res) => {
     if (paidOK) {
       // 3. Gọi hàm DB để cập nhật status PENDING -> SUCCESS
       const dbResponse = await paymentService.confirmPayment(payment_id);
-      
+
       if (!dbResponse.success) {
-         console.warn(`[PayOS Webhook] DB confirm failed for ${payment_id}:`, dbResponse.message);
+        console.warn(
+          `[PayOS Webhook] DB confirm failed for ${payment_id}:`,
+          dbResponse.message
+        );
       } else {
-         console.log(`[PayOS Webhook] Payment ${payment_id} confirmed in DB.`);
+        console.log(`[PayOS Webhook] Payment ${payment_id} confirmed in DB.`);
       }
-      
     } else if (failed) {
       // (Optional) có thể tạo 1 hàm DB fn_fail_payment_json
       // để cập nhật status PENDING -> FAILED
-      console.warn(`[PayOS Webhook] Payment ${payment_id} FAILED or CANCELLED.`);
+      console.warn(
+        `[PayOS Webhook] Payment ${payment_id} FAILED or CANCELLED.`
+      );
     }
 
     return res.status(200).json({ ok: true });
-
   } catch (err) {
-    console.error('[PayOS Webhook] Fatal Error:', err.message);
-    return res.status(200).json({ ok: true, error: "Internal processing error" });
+    console.error("[PayOS Webhook] Fatal Error:", err.message);
+    return res
+      .status(200)
+      .json({ ok: true, error: "Internal processing error" });
   }
 };
 
 // Demo thanh toán
 const createPaymentDemo = async (req, res) => {
   try {
-    const { ticket_id, method = 'DEMO' } = req.body;
+    const { ticket_id, method = "DEMO" } = req.body;
     // 1, Lấy thông tin vé
     const ticketResponse = await paymentService.getTicketDetails(ticket_id);
 
     if (ticketResponse.error) {
-      return res.status(404).json({ success: false, message: ticketResponse.error });
+      return res
+        .status(404)
+        .json({ success: false, message: ticketResponse.error });
     }
-    
+
     const ticketDetails = ticketResponse.data;
-    if (ticketDetails.status !== 'NEW') {
-      return res.status(400).json({ success: false, message: 'Vé đã được thanh toán hoặc không ở trạng thái MỚI.' });
+    if (ticketDetails.status !== "NEW") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Vé đã được thanh toán hoặc không ở trạng thái MỚI.",
+        });
     }
-    
+
     const amount = ticketDetails.final_price;
-    
+
     // 2. Tạo PENDING payment
-    const createResponse = await paymentService.createPayment(ticket_id, method, amount);
+    const createResponse = await paymentService.createPayment(
+      ticket_id,
+      method,
+      amount
+    );
     if (!createResponse.success) {
       return res.status(400).json(createResponse);
     }
-    
+
     const payment_id = createResponse.payment.payment_id;
 
     // 3. "Finalize" ngay lập tức: Cập nhật PENDING -> SUCCESS
     const confirmResponse = await paymentService.confirmPayment(payment_id);
     if (!confirmResponse.success) {
-      return res.status(500).json(confirmResponse); 
+      return res.status(500).json(confirmResponse);
     }
-    
+
     res.status(201).json({
       success: true,
-      provider: 'demo',
+      provider: "demo",
       orderCode: payment_id,
       message: "Demo payment succeeded. Vé đã sẵn sàng.",
     });
-
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-
 export const paymentController = {
   createPaymentRequest,
   confirmPaymentWebhook,
-  createPaymentDemo, 
+  createPaymentDemo,
   handlePayOSCancel,
 };
