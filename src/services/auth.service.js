@@ -83,15 +83,31 @@ const forgotPassword = async (email) => {
     return { success: false, message: 'Lỗi Database' };
   }
 };
+// const forgotPasswordMobile = async (email) => {
+//   const query = 'SELECT * FROM api.fn_auth_forgot_password_mobile_json($1)';
+//   const { rows } = await pool.query(query, [email]);
+//   return rows[0].fn_auth_forgot_password_mobile_json;
+// };
 
-const resetPassword = async (token, newPassword) => {
+// const resetPassword = async (token, newPassword) => {
+//   try {
+//     const query = 'SELECT * FROM api.fn_auth_reset_password_via_token_json($1, $2)';
+//     const { rows } = await pool.query(query, [token, newPassword]);
+//     return rows[0].fn_auth_reset_password_via_token_json;
+//   } catch (err) {
+//     console.error(err);
+//     return { success: false, message: 'Lỗi Database' };
+//   }
+// };
+// 5. Đặt lại mật khẩu (Dùng token để đổi pass mới)
+const resetPassword = async (token, oldPassword, newPassword) => {
   try {
-    const query = 'SELECT * FROM api.fn_auth_reset_password_via_token_json($1, $2)';
-    const { rows } = await pool.query(query, [token, newPassword]);
-    return rows[0].fn_auth_reset_password_via_token_json;
+    const query = 'SELECT api.change_password_with_token($1, $2, $3)';
+    await pool.query(query, [token, oldPassword, newPassword]);
+
+    return { success: true, message: 'Đổi mật khẩu thành công' };
   } catch (err) {
-    console.error(err);
-    return { success: false, message: 'Lỗi Database' };
+    return { success: false, message: err.message };
   }
 };
 

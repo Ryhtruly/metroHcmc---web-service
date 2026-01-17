@@ -138,7 +138,6 @@ const ticketController = {
     }
   },
 
-// src/controllers/ticket.controller.js
 
 getCustomerTicketsForAdmin: async (req, res) => {
   try {
