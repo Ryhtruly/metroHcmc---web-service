@@ -1,7 +1,8 @@
 import * as adminService from "../services/admin.service.js";
+import ticketService from "../services/ticket.service.js";
+import { paymentService } from "../services/payment.service.js";
 
-
-// Line 
+// Line
 export const upsertLine = async (req, res) => {
   try {
     const actor_user_id = req.user.user_id;
@@ -87,13 +88,8 @@ export const setActiveFareRule = async (req, res) => {
   try {
     const actor_user_id = req.user.user_id;
 
-    const {
-      line_code,
-      base_price,
-      base_stops,
-      step_stops,
-      step_price,
-    } = req.body;
+    const { line_code, base_price, base_stops, step_stops, step_price } =
+      req.body;
 
     const result = await adminService.setActiveFareRule(
       actor_user_id,
@@ -247,8 +243,8 @@ export const reportTraffic = async (req, res) => {
     const { from_date, to_date } = req.query;
 
     // Nếu thiếu thì mặc định lấy hôm nay
-    const start = from_date || new Date().toISOString().split('T')[0];
-    const end = to_date || new Date().toISOString().split('T')[0];
+    const start = from_date || new Date().toISOString().split("T")[0];
+    const end = to_date || new Date().toISOString().split("T")[0];
 
     const result = await adminService.reportTraffic(start, end);
 
@@ -267,7 +263,11 @@ export const getAuditLog = async (req, res) => {
   try {
     const { from_ts, to_ts, action } = req.query;
 
-    const result = await adminService.getAuditLog(from_ts, to_ts, action || null);
+    const result = await adminService.getAuditLog(
+      from_ts,
+      to_ts,
+      action || null
+    );
 
     return res.json(result);
   } catch (err) {
@@ -284,7 +284,11 @@ export const getPayments = async (req, res) => {
   try {
     const { from_ts, to_ts, status } = req.query;
 
-    const result = await adminService.getPayments(from_ts, to_ts, status || null);
+    const result = await adminService.getPayments(
+      from_ts,
+      to_ts,
+      status || null
+    );
 
     return res.json(result);
   } catch (err) {
@@ -299,10 +303,16 @@ export const getPayments = async (req, res) => {
 export const getDashboardStats = async (req, res) => {
   try {
     const data = await adminService.getDashboardStats();
-    
+
     // Tính toán sơ bộ để trả về số tổng cho Frontend đỡ phải tính
-    const totalRevenue = data.sales.reduce((acc, curr) => acc + Number(curr.amount), 0);
-    const totalPassengers = data.traffic.reduce((acc, curr) => acc + Number(curr.validations_count), 0);
+    const totalRevenue = data.sales.reduce(
+      (acc, curr) => acc + Number(curr.amount),
+      0
+    );
+    const totalPassengers = data.traffic.reduce(
+      (acc, curr) => acc + Number(curr.validations_count),
+      0
+    );
 
     res.json({
       success: true,
@@ -310,8 +320,8 @@ export const getDashboardStats = async (req, res) => {
         revenue: totalRevenue,
         passengers: totalPassengers,
         scans: Number(data.totalScans),
-        recentLogs: data.recentLogs
-      }
+        recentLogs: data.recentLogs,
+      },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -338,7 +348,7 @@ export const reportTicketTypes = async (req, res) => {
 export const getPromotions = async (req, res) => {
   try {
     // Service đã trả về { ok: true, data: [...] } từ DB
-    const result = await adminService.getPromotions(); 
+    const result = await adminService.getPromotions();
     return res.json(result); // Trả về luôn
   } catch (err) {
     console.error("getPromotions error:", err);
@@ -353,7 +363,7 @@ export const getAnnouncements = async (req, res) => {
   try {
     // Service đã trả về { ok: true, data: [...] } từ DB
     const result = await adminService.getAnnouncements();
-    return res.json(result); 
+    return res.json(result);
   } catch (err) {
     console.error("getAnnouncements error:", err);
     return res.status(500).json({ ok: false, message: err.message });
@@ -393,36 +403,41 @@ export const getTicketProducts = async (req, res) => {
 // ĐÃ ĐỔI TÊN HÀM TỪ createGiftcodeBatch sang upsertGiftcode
 export const upsertGiftcode = async (req, res) => {
   try {
-    const { 
-      promo_id, p_prefix, p_quantity, p_ticket_product_code, 
-      p_max_usage, p_starts_at, p_expires_at, p_is_active // <--- Thêm p_expires_at
+    const {
+      promo_id,
+      p_prefix,
+      p_quantity,
+      p_ticket_product_code,
+      p_max_usage,
+      p_starts_at,
+      p_expires_at,
+      p_is_active, // <--- Thêm p_expires_at
     } = req.body;
 
     const result = await adminService.upsertGiftcode(
-      promo_id, 
-      p_prefix, 
-      p_quantity, 
-      p_ticket_product_code, 
-      p_max_usage, 
-      p_starts_at, 
+      promo_id,
+      p_prefix,
+      p_quantity,
+      p_ticket_product_code,
+      p_max_usage,
+      p_starts_at,
       p_expires_at, // <--- Truyền xuống Service
       p_is_active
     );
-    
+
     let message = "Thao tác thành công.";
 
     if (result.count) {
-        message = `Đã tạo thành công ${result.count} mã giftcode.`;
+      message = `Đã tạo thành công ${result.count} mã giftcode.`;
     } else if (result.promo_id) {
-        message = "Cập nhật mã giftcode thành công.";
+      message = "Cập nhật mã giftcode thành công.";
     }
 
     return res.json({
       ok: true,
       message: message,
-      data: result
+      data: result,
     });
-
   } catch (err) {
     console.error("upsertGiftcode error:", err);
     return res.status(500).json({ ok: false, message: err.message });
@@ -468,14 +483,194 @@ export const getFeedbacks = async (req, res) => {
   try {
     // 👇 SỬA Ở ĐÂY: Gọi qua adminService thay vì dùng pool.query
     const result = await adminService.getFeedbacks();
-    
+
     // Kiểm tra kết quả trả về
     if (result && result.success) {
-        return res.json(result.data); // Trả về mảng data
+      return res.json(result.data); // Trả về mảng data
     }
     return res.json([]); // Nếu không có dữ liệu trả về mảng rỗng
   } catch (err) {
     console.error("Lỗi getFeedbacks:", err);
     return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+// Guest user_id: null cho khách vãng lai (không có tài khoản)
+// Dùng null thay vì UUID giả vì bảng tickets có thể có FK constraint
+const GUEST_USER_ID = null;
+
+/**
+ * 20) Admin mua vé LƯỢT cho khách vãng lai
+ * POST /api/admin/purchase/single
+ * Body: { line_code, from_station, to_station, stops, final_price }
+ */
+export const purchaseSingleTicket = async (req, res) => {
+  try {
+    const { line_code, from_station, to_station, stops, final_price } =
+      req.body;
+
+    // Validate input
+    if (!line_code || !from_station || !to_station || !stops || !final_price) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Thiếu thông tin: line_code, from_station, to_station, stops, final_price",
+      });
+    }
+
+    // 1. Tạo vé cho khách vãng lai
+    const ticketResult = await ticketService.createSingleTicket(
+      GUEST_USER_ID,
+      line_code,
+      from_station,
+      to_station,
+      stops,
+      final_price,
+      null // không có promo_code
+    );
+
+    if (!ticketResult?.data?.ticket) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Không thể tạo vé" });
+    }
+
+    const ticket_id = ticketResult.data.ticket.ticket_id;
+
+    // 2. Tạo payment CASH và confirm ngay
+    const paymentResult = await paymentService.createPayment(
+      ticket_id,
+      "CASH",
+      final_price
+    );
+    if (!paymentResult?.success) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Không thể tạo thanh toán" });
+    }
+
+    const payment_id = paymentResult.payment.payment_id;
+    const confirmResult = await paymentService.confirmPayment(payment_id);
+    if (!confirmResult?.success) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Không thể xác nhận thanh toán" });
+    }
+
+    // 3. Lấy thông tin vé đầy đủ (có qr_code)
+    const ticketDetail = await ticketService.getTicketDetail(ticket_id);
+
+    return res.json({
+      success: true,
+      message: "Mua vé thành công!",
+      ticket: ticketDetail?.data || ticketResult.data.ticket,
+      payment: confirmResult.payment,
+    });
+  } catch (err) {
+    console.error("purchaseSingleTicket error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getTopSpenders = async (req, res) => {
+  try {
+    const { from_date, to_date, page = 1, limit = 5 } = req.query; // Nhận thêm page
+
+    // Tính offset
+    const offset = (page - 1) * limit;
+
+    const result = await adminService.getTopSpenders(
+      from_date,
+      to_date,
+      limit,
+      offset
+    );
+    return res.json(result);
+  } catch (err) {
+    console.error("getTopSpenders error:", err);
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+};
+
+/**
+ * 21) Admin mua vé PASS cho khách vãng lai
+ * POST /api/admin/purchase/pass
+ * Body: { product_code, final_price }
+ */
+export const purchasePassTicket = async (req, res) => {
+  try {
+    const { product_code, final_price } = req.body;
+
+    // Validate input
+    if (!product_code) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin: product_code",
+      });
+    }
+
+    // 1. Tạo vé pass cho khách vãng lai
+    const ticketResult = await ticketService.createPassTicket(
+      GUEST_USER_ID,
+      product_code,
+      final_price,
+      null // không có promo_code
+    );
+
+    if (!ticketResult?.data?.ticket) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Không thể tạo vé" });
+    }
+
+    const ticket_id = ticketResult.data.ticket.ticket_id;
+    const price = final_price || ticketResult.data.ticket.final_price;
+
+    // 2. Tạo payment CASH và confirm ngay
+    const paymentResult = await paymentService.createPayment(
+      ticket_id,
+      "CASH",
+      price
+    );
+    if (!paymentResult?.success) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Không thể tạo thanh toán" });
+    }
+
+    const payment_id = paymentResult.payment.payment_id;
+    const confirmResult = await paymentService.confirmPayment(payment_id);
+    if (!confirmResult?.success) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Không thể xác nhận thanh toán" });
+    }
+
+    // 3. Lấy thông tin vé đầy đủ (có qr_code)
+    const ticketDetail = await ticketService.getTicketDetail(ticket_id);
+
+    return res.json({
+      success: true,
+      message: "Mua vé thành công!",
+      ticket: ticketDetail?.data || ticketResult.data.ticket,
+      payment: confirmResult.payment,
+    });
+  } catch (err) {
+    console.error("purchasePassTicket error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * 22) Lấy danh sách vé đã bán cho khách vãng lai (user_id IS NULL)
+ * GET /api/admin/guest-tickets
+ */
+export const getGuestTickets = async (req, res) => {
+  try {
+    const result = await adminService.getGuestTickets();
+    return res.json(result);
+  } catch (err) {
+    console.error("getGuestTickets error:", err);
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
